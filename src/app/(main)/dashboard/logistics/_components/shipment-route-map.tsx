@@ -171,44 +171,52 @@ export function ShipmentRouteMap({ shipment }: ShipmentRouteMapProps) {
   }, [shipment]);
 
   return (
-    <div className="size-full min-h-0 overflow-hidden bg-[#d4dadc] dark:bg-[#2C353C]">
+    <div className="size-full min-h-0 overflow-hidden bg-[#c4cdd8] dark:bg-[#0b1220]">
       <svg
-        aria-label="Southeast Asia shipment region map"
-        className="block size-full bg-[#d4dadc] dark:bg-[#2C353C]"
+        aria-label="Production route map — Greater Vancouver"
+        className="block size-full bg-[#c4cdd8] dark:bg-[#0b1220]"
         role="img"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         preserveAspectRatio="xMidYMid meet"
       >
-        <rect height={HEIGHT} width={WIDTH} className="fill-[#d4dadc] dark:fill-[#2C353C]" />
+        <rect height={HEIGHT} width={WIDTH} className="fill-[#c4cdd8] dark:fill-[#0b1220]" />
         {land && (
           <path
             d={path(land as GeoPermissibleObjects) ?? undefined}
-            className="fill-[#fafaf8] dark:fill-[#0e0e0e]"
-            stroke="#f0dddd"
-            strokeWidth={0.8}
+            className="fill-[#ece8e0] dark:fill-[#15202f]"
+            stroke="#b8b0a4"
+            strokeWidth={0.5}
           />
         )}
         {borders && (
           <path
             d={path(borders as GeoPermissibleObjects) ?? undefined}
-            className="fill-none stroke-[#ebd6d8] dark:stroke-[#2C353C]"
+            className="fill-none stroke-[#b8b0a4] dark:stroke-[#1c2c40]"
+            strokeWidth={0.4}
           />
         )}
         {routePath && (
           <path
             d={routePath}
-            className="fill-none stroke-primary"
-            strokeDasharray="8 8"
+            fill="none"
+            stroke="#f2b90e"
+            strokeDasharray="6 5"
             strokeLinecap="round"
-            strokeWidth={3}
+            strokeWidth={2.5}
           />
         )}
         {routePoints.map(({ country, label, point }) =>
           point ? (
             <g key={label} transform={`translate(${point[0]}, ${point[1]})`}>
-              <circle className="fill-background stroke-primary" r={8} strokeWidth={3} />
-              <circle className="fill-primary" r={3} />
-              <text className="fill-foreground font-medium text-[10px]" dy={-14} textAnchor="middle">
+              <circle className="fill-[#c4cdd8] dark:fill-[#0b1220]" stroke="#f2b90e" r={7} strokeWidth={2} />
+              <circle fill="#f2b90e" r={2.5} />
+              <text
+                className="fill-[#2c3a4a] text-[10px] dark:fill-[#bfd4ef]"
+                dy={-11}
+                textAnchor="middle"
+                fontWeight="500"
+                letterSpacing="0.04em"
+              >
                 {country}
               </text>
             </g>

@@ -17,12 +17,12 @@ const modeIcons = {
 
 const progressRingClasses: Record<Shipment["status"], string> = {
   Scheduled: "text-muted-foreground",
-  "In Transit": "text-primary",
-  "Out for Delivery": "text-primary",
-  Delivered: "text-green-600",
-  Delayed: "text-destructive",
-  "On Hold": "text-amber-500",
-  "Customs Hold": "text-amber-500",
+  "En Route": "text-[#f2b90e]",
+  Dispatched: "text-[#f2b90e]",
+  Completed: "text-[#45d30c]",
+  "Held — Delayed": "text-[#d3410c]",
+  "On Hold": "text-[#933614]",
+  "Awaiting Clearance": "text-[#933614]",
 };
 
 function getProgressRingClass(status: Shipment["status"]) {
@@ -57,15 +57,15 @@ function ShipmentCard({ shipment, active, onSelectShipment }: ShipmentCardProps)
         onSelectShipment(shipment.id);
       }}
       className={cn(
-        "flex w-full flex-col gap-5 rounded-xl border p-3 text-left transition-colors",
-        "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-        active && "border-primary bg-muted/50",
+        "flex w-full flex-col gap-3 rounded border p-3 text-left transition-colors",
+        "hover:bg-[#f2b90e]/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b90e]/30",
+        active ? "border-[#f2b90e]/50 bg-[#f2b90e]/[0.04]" : "border-border",
       )}
     >
       <div className="flex items-center justify-between">
-        <div>#{shipment.id}</div>
+        <div className="font-mono text-[11px] tracking-wider text-muted-foreground">{shipment.id}</div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <div
             style={{ "--angle": `${angle}deg` } as React.CSSProperties}
             className={getProgressRingClass(shipment.status)}
@@ -74,27 +74,25 @@ function ShipmentCard({ shipment, active, onSelectShipment }: ShipmentCardProps)
               <div className="size-1 rounded-full bg-current" />
             </div>
           </div>
-          <div className="text-muted-foreground text-xs">{shipment.status}</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{shipment.status}</div>
         </div>
       </div>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <div className={cn(`flag:${shipment.origin.countryCode.toUpperCase()}`, "rounded-xs text-3xl outline")} />
-          <div className="flex flex-col gap-0.5">
-            <div className="font-medium text-xs leading-none">{shipment.origin.country},</div>
-            <div className="text-muted-foreground text-xs">{shipment.origin.display}</div>
+          <div className={cn(`flag:${shipment.origin.countryCode.toUpperCase()}`, "rounded-xs text-xl outline")} />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <div className="truncate text-xs font-medium leading-none">{shipment.origin.display}</div>
+            <div className="text-[10px] text-muted-foreground leading-none">{shipment.origin.country}</div>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 text-right">
-          <div className="flex flex-col gap-0.5">
-            <div className="font-medium text-xs leading-none">{shipment.destination.country},</div>
-            <div className="text-muted-foreground text-xs">{shipment.destination.display}</div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <div className="truncate text-xs font-medium leading-none">{shipment.destination.display}</div>
+            <div className="text-[10px] text-muted-foreground leading-none">{shipment.destination.country}</div>
           </div>
-          <div
-            className={cn(`flag:${shipment.destination.countryCode.toUpperCase()}`, "rounded-xs text-3xl outline")}
-          />
+          <div className={cn(`flag:${shipment.destination.countryCode.toUpperCase()}`, "rounded-xs text-xl outline")} />
         </div>
       </div>
 
@@ -111,16 +109,18 @@ function ShipmentCard({ shipment, active, onSelectShipment }: ShipmentCardProps)
       </div>
 
       <div className="flex items-center justify-between">
-        <div>
-          <div className="text-muted-foreground text-xs leading-none">Cargo</div>
-          <div className="truncate text-sm tracking-tight">{shipment.cargo}</div>
+        <div className="min-w-0 flex-1 pr-3">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none mb-1">
+            Brokered Items
+          </div>
+          <div className="truncate text-xs font-medium">{shipment.cargo}</div>
         </div>
-        <div className="text-right">
-          <div className="text-muted-foreground text-xs leading-none">ETA</div>
-          <div className="text-sm tabular-nums tracking-tight">
+        <div className="shrink-0 text-right">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none mb-1">Call Time</div>
+          <div className="font-mono text-xs tabular-nums">
             {shipment.eta}
             {shipment.etaMeta && (
-              <span className="ml-1 font-normal text-muted-foreground text-xs">{shipment.etaMeta}</span>
+              <span className="ml-1 font-sans font-normal text-muted-foreground text-[10px]">{shipment.etaMeta}</span>
             )}
           </div>
         </div>
@@ -133,34 +133,40 @@ export function ShipmentList({ shipments, selectedShipmentId, onSelectShipment }
   return (
     <Card className="h-full rounded-none ring-0">
       <CardHeader>
-        <CardTitle className="font-normal text-xl">Shipments</CardTitle>
+        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">
+          Transport Orders
+        </CardTitle>
         <CardAction>
           <Button size="icon-sm" variant="ghost">
             <SlidersHorizontal />
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-4 overflow-hidden px-0">
+      <CardContent className="flex flex-1 flex-col gap-3 overflow-hidden px-0">
         <Tabs defaultValue="all">
           <TabsList className="w-full border-b px-4" variant="line">
             <TabsTrigger className="text-xs" value="all">
               All (156)
             </TabsTrigger>
-            <TabsTrigger className="text-xs" value="in-transit">
-              In Transit (32)
+            <TabsTrigger className="text-xs" value="en-route">
+              En Route (32)
             </TabsTrigger>
-            <TabsTrigger className="text-xs" value="delivered">
-              Delivered (98)
+            <TabsTrigger className="text-xs" value="completed">
+              Completed (98)
             </TabsTrigger>
-            <TabsTrigger className="text-xs" value="delayed">
-              Delayed (9)
+            <TabsTrigger className="text-xs" value="held">
+              Held (9)
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
         <div className="px-4">
           <InputGroup className="h-8">
-            <InputGroupInput className="h-8" aria-label="Search shipments" placeholder="Search shipments..." />
+            <InputGroupInput
+              className="h-8"
+              aria-label="Search transport orders"
+              placeholder="Search transport orders..."
+            />
             <InputGroupAddon>
               <Search />
             </InputGroupAddon>
@@ -168,7 +174,7 @@ export function ShipmentList({ shipments, selectedShipmentId, onSelectShipment }
         </div>
 
         <ScrollArea className="h-0 flex-1">
-          <div className="flex flex-col gap-4 px-4">
+          <div className="flex flex-col gap-2 px-4">
             {shipments.map((shipment) => (
               <ShipmentCard
                 active={shipment.id === selectedShipmentId}

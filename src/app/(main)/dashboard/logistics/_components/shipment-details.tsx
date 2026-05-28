@@ -19,22 +19,22 @@ const modeIcons = {
 
 const progressRingClasses: Record<Shipment["status"], string> = {
   Scheduled: "text-muted-foreground",
-  "In Transit": "text-primary",
-  "Out for Delivery": "text-primary",
-  Delivered: "text-green-600",
-  Delayed: "text-destructive",
-  "On Hold": "text-amber-500",
-  "Customs Hold": "text-amber-500",
+  "En Route": "text-[#f2b90e]",
+  Dispatched: "text-[#f2b90e]",
+  Completed: "text-[#45d30c]",
+  "Held — Delayed": "text-[#d3410c]",
+  "On Hold": "text-[#933614]",
+  "Awaiting Clearance": "text-[#933614]",
 };
 
 const statusBadgeClasses: Record<Shipment["status"], string> = {
   Scheduled: "border-muted bg-muted/50 text-muted-foreground",
-  "In Transit": "border-primary/20 bg-primary/10 text-primary",
-  "Out for Delivery": "border-primary/20 bg-primary/10 text-primary",
-  Delivered: "border-green-600/20 bg-green-600/10 text-green-600",
-  Delayed: "border-destructive/20 bg-destructive/10 text-destructive",
-  "On Hold": "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  "Customs Hold": "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  "En Route": "border-[#f2b90e]/30 bg-[#f2b90e]/10 text-[#f2b90e]",
+  Dispatched: "border-[#f2b90e]/30 bg-[#f2b90e]/10 text-[#f2b90e]",
+  Completed: "border-[#45d30c]/30 bg-[#45d30c]/10 text-[#45d30c]",
+  "Held — Delayed": "border-[#d3410c]/30 bg-[#d3410c]/10 text-[#d3410c]",
+  "On Hold": "border-[#933614]/30 bg-[#933614]/10 text-[#933614]",
+  "Awaiting Clearance": "border-[#933614]/30 bg-[#933614]/10 text-[#933614]",
 };
 
 type ShipmentDetailsProps = {
@@ -43,32 +43,32 @@ type ShipmentDetailsProps = {
 
 function getContactLabel(mode: Shipment["mode"]) {
   if (mode === "land") {
-    return "Call Driver";
+    return "Contact Driver";
   }
 
   if (mode === "air") {
-    return "Call Airline Support";
+    return "Contact Coordinator";
   }
 
-  return "Call Captain";
+  return "Contact Logistics";
 }
 
 function getTransportNumberLabel(mode: Shipment["mode"]) {
   if (mode === "land") {
-    return "Vehicle number";
+    return "Vehicle plate";
   }
 
   if (mode === "air") {
-    return "Flight number";
+    return "Flight ref.";
   }
 
-  return "Vessel number";
+  return "Vessel ref.";
 }
 
 function EmptyShipmentOverview() {
   return (
-    <div className="grid min-h-48 place-items-center rounded-lg border border-dashed text-muted-foreground text-sm">
-      Select a shipment to view details.
+    <div className="grid min-h-48 place-items-center rounded border border-dashed text-[11px] uppercase tracking-widest text-muted-foreground">
+      Select a transport order to view brief.
     </div>
   );
 }
@@ -82,7 +82,7 @@ function ShipmentOverview({ shipment }: { shipment: Shipment }) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex items-center gap-2">
-          <h1 className="font-medium text-lg tabular-nums tracking-tight sm:text-xl">#{shipment.id}</h1>
+          <h1 className="font-mono text-base tabular-nums tracking-wider sm:text-lg">{shipment.id}</h1>
           <Button variant="ghost" size="icon-sm" aria-label="Copy shipment ID">
             <Copy />
           </Button>
@@ -97,7 +97,7 @@ function ShipmentOverview({ shipment }: { shipment: Shipment }) {
           <span className="text-foreground tabular-nums">{shipment.progress}% complete</span>
           <span className="text-muted-foreground">·</span>
           <span className="text-foreground tabular-nums">
-            ETA: {shipment.eta} {shipment.etaMeta}
+            Call Time: {shipment.eta} {shipment.etaMeta}
           </span>
         </div>
       </div>
@@ -106,8 +106,10 @@ function ShipmentOverview({ shipment }: { shipment: Shipment }) {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Avatar className="size-9 after:rounded-sm">
-            <AvatarFallback className="rounded-sm">{shipment.customer.initials}</AvatarFallback>
+          <Avatar className="size-8 after:rounded-none">
+            <AvatarFallback className="rounded-none bg-muted font-mono text-[11px] tracking-wider">
+              {shipment.customer.initials}
+            </AvatarFallback>
           </Avatar>
 
           <div className="flex flex-col gap-1">
@@ -132,7 +134,7 @@ function ShipmentOverview({ shipment }: { shipment: Shipment }) {
 
       <div className="flex flex-col gap-8">
         <div className="flex items-start justify-between gap-4">
-          <h2 className="font-medium">Cargo details</h2>
+          <h2 className="font-medium">Brokered Items</h2>
 
           <Button variant="outline" size="sm">
             <ContactIcon data-icon="inline-start" />
@@ -140,52 +142,58 @@ function ShipmentOverview({ shipment }: { shipment: Shipment }) {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-[1.35fr_1fr_1.1fr_1.15fr_1fr]">
-          <div className="col-span-2 flex flex-col gap-1 md:col-span-1 md:gap-2">
-            <div className="text-muted-foreground text-xs leading-none md:invisible md:text-sm">Cargo</div>
-            <div className="whitespace-nowrap text-sm leading-none">{shipment.cargo}</div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4 md:grid-cols-[1.35fr_1fr_1.1fr_1.15fr_1fr]">
+          <div className="col-span-2 flex flex-col gap-1.5 md:col-span-1">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none md:invisible">
+              Item
+            </div>
+            <div className="whitespace-nowrap text-sm font-medium leading-none">{shipment.cargo}</div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="text-muted-foreground text-xs leading-none md:text-sm">Total weight</div>
-            <div className="text-sm leading-none">{shipment.weight}</div>
+          <div className="flex flex-col gap-1.5">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none">Total load</div>
+            <div className="font-mono text-sm leading-none tabular-nums">{shipment.weight}</div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="text-muted-foreground text-xs leading-none md:text-sm">Transport mode</div>
+          <div className="flex flex-col gap-1.5">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none">Vehicle</div>
             <div className="text-sm capitalize leading-none">
               {shipment.mode} · {shipment.routeType}
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="text-muted-foreground text-xs leading-none md:text-sm">{transportNumberLabel}</div>
-            <div className="text-sm leading-none">{shipment.transportNumber}</div>
+          <div className="flex flex-col gap-1.5">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none">
+              {transportNumberLabel}
+            </div>
+            <div className="font-mono text-sm leading-none tracking-wide">{shipment.transportNumber}</div>
           </div>
 
-          <div className="flex flex-col gap-2 md:text-right">
-            <div className="text-muted-foreground text-xs leading-none md:text-sm">Status</div>
-            <div className="text-sm leading-none">{shipment.progress}% complete</div>
+          <div className="flex flex-col gap-1.5 md:text-right">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none">
+              Logistics Status
+            </div>
+            <div className="font-mono text-sm leading-none tabular-nums">{shipment.progress}% complete</div>
           </div>
         </div>
       </div>
 
       <Separator />
 
-      <Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
-        <AlertTriangleIcon />
-        <AlertTitle>{shipment.handling.label}</AlertTitle>
+      <Alert className="rounded border-[#933614]/40 bg-[#933614]/[0.06] text-[#dbd5c5] dark:border-[#933614]/50 dark:bg-[#933614]/[0.08] dark:text-[#dbd5c5]">
+        <AlertTriangleIcon className="text-[#f2b90e]" />
+        <AlertTitle className="text-[11px] uppercase tracking-widest text-[#f2b90e]">
+          {shipment.handling.label}
+        </AlertTitle>
         <AlertDescription className="space-y-2">
-          <div className="border-amber-900 text-amber-900 leading-none dark:border-amber-50 dark:text-amber-50">
-            {shipment.handling.note}
-          </div>
+          <div className="text-xs leading-relaxed text-[#dbd5c5]">{shipment.handling.note}</div>
 
-          <Separator className="bg-amber-800 dark:bg-amber-50" />
+          <Separator className="bg-[#933614]/30" />
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {shipment.handling.tags.map(({ icon: TagIcon, label }) => (
               <Badge
-                className="rounded-sm border-amber-200 bg-background/50 text-amber-900 dark:border-amber-900 dark:text-amber-50"
+                className="rounded-sm border-[#933614]/40 bg-[#933614]/[0.08] text-[#dbd5c5] text-[10px] uppercase tracking-wider"
                 key={label}
                 variant="outline"
               >
@@ -203,7 +211,7 @@ function ShipmentOverview({ shipment }: { shipment: Shipment }) {
 export function ShipmentDetails({ shipment }: ShipmentDetailsProps) {
   if (!shipment) {
     return (
-      <div className="grid h-full min-h-0 grid-rows-[320px_1fr] overflow-hidden lg:grid-rows-[420px_1fr]">
+      <div className="grid h-full min-h-0 grid-rows-[360px_1fr] overflow-hidden lg:grid-rows-[460px_1fr]">
         <div className="min-h-0 overflow-hidden">
           <ShipmentRouteMap shipment={null} />
         </div>
@@ -215,54 +223,54 @@ export function ShipmentDetails({ shipment }: ShipmentDetailsProps) {
   }
 
   return (
-    <div className="grid h-full min-h-0 grid-rows-[320px_1fr] overflow-hidden lg:grid-rows-[420px_1fr]">
+    <div className="grid h-full min-h-0 grid-rows-[360px_1fr] overflow-hidden lg:grid-rows-[460px_1fr]">
       <div className="min-h-0 overflow-hidden">
         <ShipmentRouteMap shipment={shipment} />
       </div>
       <div className="min-h-0 overflow-hidden">
-        <div className="h-full min-h-0 py-2">
+        <div className="h-full min-h-0 py-0">
           <Tabs defaultValue="overview" className="h-full gap-0">
             <TabsList
               className="w-full justify-start gap-2 border-b px-4 **:data-[slot=tabs-trigger]:text-xs sm:gap-4 sm:**:data-[slot=tabs-trigger]:text-sm"
               variant="line"
             >
               <TabsTrigger className="flex-none" value="overview">
-                Overview
+                Brief
               </TabsTrigger>
               <TabsTrigger className="flex-none" value="route">
                 Route
               </TabsTrigger>
               <TabsTrigger className="flex-none" value="cargo">
-                Cargo
+                Manifest
               </TabsTrigger>
               <TabsTrigger className="flex-none" value="documents">
                 Documents
               </TabsTrigger>
               <TabsTrigger className="flex-none" value="activity">
-                Activity
+                Production Log
               </TabsTrigger>
             </TabsList>
             <TabsContent className="min-h-0 overflow-auto p-4" value="overview">
               <ShipmentOverview shipment={shipment} />
             </TabsContent>
             <TabsContent className="p-4" value="route">
-              <div className="grid h-full place-items-center rounded-md border border-dashed text-muted-foreground text-sm">
-                Route view coming soon.
+              <div className="grid h-full place-items-center rounded border border-dashed text-[11px] uppercase tracking-widest text-muted-foreground">
+                Route detail — pending data connection.
               </div>
             </TabsContent>
             <TabsContent className="p-4" value="cargo">
-              <div className="grid h-full place-items-center rounded-md border border-dashed text-muted-foreground text-sm">
-                Cargo view coming soon.
+              <div className="grid h-full place-items-center rounded border border-dashed text-[11px] uppercase tracking-widest text-muted-foreground">
+                Manifest view — pending data connection.
               </div>
             </TabsContent>
             <TabsContent className="p-4" value="documents">
-              <div className="grid h-full place-items-center rounded-md border border-dashed text-muted-foreground text-sm">
-                Documents view coming soon.
+              <div className="grid h-full place-items-center rounded border border-dashed text-[11px] uppercase tracking-widest text-muted-foreground">
+                Documents — pending attachment link.
               </div>
             </TabsContent>
             <TabsContent className="p-4" value="activity">
-              <div className="grid h-full place-items-center rounded-md border border-dashed text-muted-foreground text-sm">
-                Activity view coming soon.
+              <div className="grid h-full place-items-center rounded border border-dashed text-[11px] uppercase tracking-widest text-muted-foreground">
+                Production log — pending data connection.
               </div>
             </TabsContent>
           </Tabs>
