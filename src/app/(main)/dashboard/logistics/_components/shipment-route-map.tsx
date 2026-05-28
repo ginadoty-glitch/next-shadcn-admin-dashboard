@@ -183,33 +183,33 @@ export function ShipmentRouteMap({ shipment }: ShipmentRouteMapProps) {
         {land && (
           <path
             d={path(land as GeoPermissibleObjects) ?? undefined}
-            className="fill-[#ece8e0] dark:fill-[#15202f]"
-            stroke="#b8b0a4"
-            strokeWidth={0.5}
+            className="fill-[#e4e9ef] dark:fill-[#162132]"
+            stroke="none"
+            strokeWidth={0}
           />
         )}
         {borders && (
           <path
             d={path(borders as GeoPermissibleObjects) ?? undefined}
-            className="fill-none stroke-[#b8b0a4] dark:stroke-[#1c2c40]"
-            strokeWidth={0.4}
+            className="fill-none stroke-[#a8b4c0] dark:stroke-[#1e3148]"
+            strokeWidth={0.5}
           />
         )}
         {routePath && (
           <path
             d={routePath}
             fill="none"
-            stroke="#f2b90e"
+            stroke="#4a7fa5"
             strokeDasharray="6 5"
             strokeLinecap="round"
-            strokeWidth={2.5}
+            strokeWidth={2}
           />
         )}
         {routePoints.map(({ country, label, point }) =>
           point ? (
             <g key={label} transform={`translate(${point[0]}, ${point[1]})`}>
-              <circle className="fill-[#c4cdd8] dark:fill-[#0b1220]" stroke="#f2b90e" r={7} strokeWidth={2} />
-              <circle fill="#f2b90e" r={2.5} />
+              <circle className="fill-[#c4cdd8] dark:fill-[#0b1220]" stroke="#4a7fa5" r={6} strokeWidth={1.5} />
+              <circle fill="#4a7fa5" r={2} />
               <text
                 className="fill-[#2c3a4a] text-[10px] dark:fill-[#bfd4ef]"
                 dy={-11}

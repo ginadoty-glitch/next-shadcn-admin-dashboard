@@ -22,7 +22,7 @@
  * - Blocked cards get a left border accent, not a full card redesign.
  */
 
-import { Plane, Search, Ship, SlidersHorizontal, Truck } from "lucide-react";
+import { Search, SlidersHorizontal, Truck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,10 +36,11 @@ import type { Shipment } from "../../logistics/_components/shipment-data";
 
 // ─── Visual maps ───────────────────────────────────────────────────────────────
 
+// All current orders are land/road. Icon kept for future multi-mode support.
 const modeIcons = {
-  air: Plane,
+  air: Truck,
   land: Truck,
-  sea: Ship,
+  sea: Truck,
 } as const;
 
 const progressRingClasses: Record<Shipment["status"], string> = {
@@ -131,10 +132,10 @@ function DispatchQueueCard({ shipment, derived, active, onSelectShipment }: Disp
         onSelectShipment(shipment.id);
       }}
       className={cn(
-        "relative flex w-full flex-col gap-3 rounded border p-3 text-left transition-colors",
-        "hover:bg-[#f2b90e]/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b90e]/30",
-        // Active selection
-        active ? "border-[#f2b90e]/50 bg-[#f2b90e]/[0.04]" : "border-border",
+        "relative flex w-full flex-col gap-2.5 rounded border p-3 text-left transition-colors",
+        "hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bfd4ef]/25",
+        // Active selection — cool steel, not marigold
+        active ? "border-[#bfd4ef]/35 bg-[#bfd4ef]/[0.04]" : "border-border/60",
         // Propagation border overrides — left accent only
         !active && hasBlockingState && "border-l-[#d3410c]/60",
         !active && !hasBlockingState && hasAttentionState && "border-l-[#f2b90e]/40",
@@ -165,21 +166,20 @@ function DispatchQueueCard({ shipment, derived, active, onSelectShipment }: Disp
         </div>
       </div>
 
-      {/* Row 2: Origin → Destination */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <div className={cn(`flag:${shipment.origin.countryCode.toUpperCase()}`, "rounded-xs text-xl outline")} />
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <div className="truncate font-medium text-xs leading-none">{shipment.origin.display}</div>
-            <div className="text-[10px] text-muted-foreground leading-none">{shipment.origin.country}</div>
+      {/* Row 2: Origin → Destination. Flags suppressed — domestic CA transport. */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <div className="truncate font-medium text-xs leading-none">{shipment.origin.display}</div>
+          <div className="text-[9px] text-muted-foreground/60 uppercase leading-none tracking-wide">
+            {shipment.origin.country}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 text-right">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <div className="truncate font-medium text-xs leading-none">{shipment.destination.display}</div>
-            <div className="text-[10px] text-muted-foreground leading-none">{shipment.destination.country}</div>
+        <span className="shrink-0 pt-0.5 text-[10px] text-muted-foreground/30">→</span>
+        <div className="flex min-w-0 flex-col gap-0.5 text-right">
+          <div className="truncate font-medium text-xs leading-none">{shipment.destination.display}</div>
+          <div className="text-[9px] text-muted-foreground/60 uppercase leading-none tracking-wide">
+            {shipment.destination.country}
           </div>
-          <div className={cn(`flag:${shipment.destination.countryCode.toUpperCase()}`, "rounded-xs text-xl outline")} />
         </div>
       </div>
 
@@ -196,32 +196,34 @@ function DispatchQueueCard({ shipment, derived, active, onSelectShipment }: Disp
         />
       </div>
 
-      {/* Row 4: Cargo + Call Time */}
-      <div className="flex items-center justify-between">
-        <div className="min-w-0 flex-1 pr-3">
-          <div className="mb-1 text-[10px] text-muted-foreground uppercase leading-none tracking-widest">
+      {/* Row 4: Cargo (primary) + Call Time (secondary-primary) */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="mb-0.5 text-[9px] text-muted-foreground/60 uppercase leading-none tracking-widest">
             Brokered Items
           </div>
           <div className="truncate font-medium text-xs">{shipment.cargo}</div>
         </div>
         <div className="shrink-0 text-right">
-          <div className="mb-1 text-[10px] text-muted-foreground uppercase leading-none tracking-widest">Call Time</div>
+          <div className="mb-0.5 text-[9px] text-muted-foreground/60 uppercase leading-none tracking-widest">
+            Call Time
+          </div>
           <div className="font-mono text-xs tabular-nums">
             {shipment.eta}
             {shipment.etaMeta && (
-              <span className="ml-1 font-normal font-sans text-[10px] text-muted-foreground">{shipment.etaMeta}</span>
+              <span className="ml-1 font-normal font-sans text-[9px] text-muted-foreground/70">{shipment.etaMeta}</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Row 5: Urgency / coordination note */}
+      {/* Row 5: Coordination note — urgency drives color, not weight */}
       <div
         className={cn(
-          "border-border border-t pt-2 text-[10px] leading-snug",
+          "border-border/50 border-t pt-2 text-[10px] leading-snug",
           shipment.urgency === "priority" && "text-[#f2b90e]",
-          shipment.urgency === "watch" && "text-[#dbd5c5]",
-          shipment.urgency === "normal" && "text-muted-foreground",
+          shipment.urgency === "watch" && "text-[#94a3b8]",
+          shipment.urgency === "normal" && "text-muted-foreground/60",
         )}
       >
         {shipment.urgency === "priority" && <span className="mr-1">▲</span>}

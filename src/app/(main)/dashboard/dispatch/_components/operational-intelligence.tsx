@@ -238,16 +238,25 @@ export function OperationalIntelligence({
                 <div
                   key={s.id}
                   className={cn(
-                    "rounded border border-[#f2b90e]/20 px-2 py-1.5 transition-colors",
-                    s.id === selectedOrderId ? "border-[#f2b90e]/40 bg-[#f2b90e]/[0.07]" : "bg-[#f2b90e]/[0.03]",
+                    "rounded border px-2 py-1.5 transition-colors",
+                    s.id === selectedOrderId
+                      ? "border-[#f2b90e]/35 bg-[#f2b90e]/[0.06]"
+                      : "border-border/50 bg-muted/10",
                   )}
                 >
                   <div className="flex items-baseline justify-between gap-1.5">
-                    <span className="font-mono text-[#f2b90e] text-[10px] tracking-wider">{s.id}</span>
+                    <span
+                      className={cn(
+                        "font-mono text-[10px] tracking-wider",
+                        s.id === selectedOrderId ? "text-[#f2b90e]" : "text-[#dbd5c5]",
+                      )}
+                    >
+                      {s.id}
+                    </span>
                     <span className="font-mono text-[9px] text-muted-foreground tabular-nums">{s.eta}</span>
                   </div>
-                  <div className="mt-0.5 truncate text-[#dbd5c5] text-[10px]">{s.cargo}</div>
-                  <div className="mt-0.5 text-[9px] text-muted-foreground">{s.customer.name}</div>
+                  <div className="mt-0.5 truncate text-[10px] text-muted-foreground">{s.cargo}</div>
+                  <div className="mt-0.5 text-[9px] text-muted-foreground/60">{s.customer.name}</div>
                 </div>
               ))}
             </div>
@@ -271,15 +280,15 @@ export function OperationalIntelligence({
                     <div
                       key={s.id}
                       className={cn(
-                        "rounded border border-[#933614]/25 px-2 py-1.5 transition-colors",
-                        s.id === selectedOrderId ? "border-[#933614]/45 bg-[#933614]/[0.07]" : "bg-[#933614]/[0.03]",
+                        "border-[#d3410c]/40 border-l-2 py-1.5 pl-2.5 transition-colors",
+                        s.id === selectedOrderId && "bg-[#d3410c]/[0.04]",
                       )}
                     >
                       <div className="flex items-baseline justify-between gap-1.5">
                         <span className="font-mono text-[#dbd5c5] text-[10px] tracking-wider">{s.id}</span>
-                        <span className="text-[#933614] text-[9px]">⊘ unsigned</span>
+                        <span className="font-mono text-[#d3410c] text-[9px]">⊘ unsigned</span>
                       </div>
-                      <div className="mt-0.5 text-[9px] text-muted-foreground">{s.customer.name}</div>
+                      <div className="mt-0.5 text-[9px] text-muted-foreground/60">{s.customer.name}</div>
                       {unsignedDoc && (
                         <div className="mt-0.5 truncate text-[9px] text-muted-foreground/60">{unsignedDoc.name}</div>
                       )}

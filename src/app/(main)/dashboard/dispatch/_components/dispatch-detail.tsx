@@ -2,7 +2,6 @@
 
 import { AlertTriangleIcon, Phone, Radio } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,9 +32,9 @@ const statusBadgeClasses: Record<Shipment["status"], string> = {
 };
 
 const driverStatusDot: Record<DriverAssignment["status"], string> = {
-  active: "bg-[#45d30c]",
+  active: "bg-[#47AE90]",
   staged: "bg-[#f2b90e]",
-  standby: "bg-muted-foreground",
+  standby: "bg-[#4a7fa5]",
   "off-duty": "bg-border",
 };
 
@@ -222,16 +221,25 @@ function PropagationBanners({ derived }: { derived: DerivedOrderState }) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="text-[9px] text-muted-foreground uppercase tracking-[0.15em]">Propagation Impacts</div>
+      <div className="text-[9px] text-muted-foreground/70 uppercase tracking-[0.15em]">Propagation Impacts</div>
       {banners.map(({ key, tier, label, note }) => {
         const meta = conditionTierMeta[tier];
+        const leftBorder =
+          tier === "legal" || tier === "blocker"
+            ? "border-[#d3410c]/60"
+            : tier === "attention"
+              ? "border-[#f2b90e]/50"
+              : "border-[#bfd4ef]/30";
+        const subtleBg = tier === "legal" || tier === "blocker" ? "bg-[#d3410c]/[0.04]" : "";
         return (
-          <div key={key} className={cn("rounded border px-2.5 py-2", meta.borderClass, meta.bgClass)}>
-            <div className="mb-1 flex items-baseline gap-1.5">
-              <span className={cn("text-[9px] uppercase tracking-[0.1em]", meta.textClass)}>{meta.indicator}</span>
+          <div key={key} className={cn("border-l-2 py-1.5 pl-2.5", leftBorder, subtleBg)}>
+            <div className="flex items-baseline gap-2">
+              <span className={cn("font-mono text-[9px] uppercase tracking-[0.1em]", meta.textClass)}>
+                {meta.indicator}
+              </span>
+              <span className="font-medium text-[#dbd5c5] text-[10px]">{label}</span>
             </div>
-            <div className="font-medium text-[#dbd5c5] text-[10px] leading-snug">{label}</div>
-            <div className="mt-0.5 text-[10px] text-muted-foreground leading-relaxed">{note}</div>
+            <div className="mt-0.5 text-[9px] text-muted-foreground/70 leading-snug">{note}</div>
           </div>
         );
       })}
@@ -254,7 +262,7 @@ function DriverCard({ assignment }: { assignment: DriverAssignment }) {
   const label = driverStatusLabel[assignment.status];
 
   return (
-    <div className="flex flex-col gap-3 rounded border border-border bg-muted/20 px-3 py-3">
+    <div className="flex flex-col gap-3 rounded-sm bg-muted/15 px-3 py-3">
       <div className="flex items-center justify-between">
         <div className="text-[9px] text-muted-foreground uppercase tracking-[0.15em]">Driver Assignment</div>
         <div className="flex items-center gap-1.5">
@@ -480,21 +488,21 @@ export function DispatchDetail({ shipment, assignment, derived, linkedConditions
             </div>
           )}
 
-          {/* Coordination note */}
+          {/* Coordination note — left border accent, no outer box */}
           <div
             className={cn(
-              "rounded border px-3 py-2.5",
-              shipment.urgency === "priority" && "border-[#f2b90e]/30 bg-[#f2b90e]/[0.05]",
-              shipment.urgency === "watch" && "border-[#933614]/30 bg-[#933614]/[0.04]",
-              shipment.urgency === "normal" && "border-border bg-muted/20",
+              "border-l-2 py-1 pl-3",
+              shipment.urgency === "priority" && "border-[#f2b90e]/60",
+              shipment.urgency === "watch" && "border-[#4a7fa5]/50",
+              shipment.urgency === "normal" && "border-border",
             )}
           >
             <div
               className={cn(
                 "mb-1 text-[9px] uppercase tracking-widest",
                 shipment.urgency === "priority" && "text-[#f2b90e]",
-                shipment.urgency === "watch" && "text-[#dbd5c5]",
-                shipment.urgency === "normal" && "text-muted-foreground",
+                shipment.urgency === "watch" && "text-[#94a3b8]",
+                shipment.urgency === "normal" && "text-muted-foreground/70",
               )}
             >
               {shipment.urgency === "priority" && "▲ "}
@@ -509,19 +517,18 @@ export function DispatchDetail({ shipment, assignment, derived, linkedConditions
 
           <Separator />
 
-          {/* Handling */}
-          <Alert className="rounded border-[#933614]/40 bg-[#933614]/[0.06] text-[#dbd5c5]">
-            <AlertTriangleIcon className="text-[#f2b90e]" />
-            <AlertTitle className="text-[#f2b90e] text-[10px] uppercase tracking-widest">
-              {shipment.handling.label}
-            </AlertTitle>
-            <AlertDescription className="space-y-2">
-              <div className="text-[#dbd5c5] text-[11px] leading-relaxed">{shipment.handling.note}</div>
-              <Separator className="bg-[#933614]/30" />
-              <div className="flex flex-wrap gap-1.5">
+          {/* Handling — restrained; secondary to operational conditions */}
+          <div className="border-[#933614]/40 border-l-2 py-1 pl-3">
+            <div className="mb-1 flex items-center gap-1.5">
+              <AlertTriangleIcon className="size-3 shrink-0 text-[#933614]" />
+              <span className="text-[#dbd5c5]/70 text-[9px] uppercase tracking-widest">{shipment.handling.label}</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">{shipment.handling.note}</p>
+            {shipment.handling.tags.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap gap-1">
                 {shipment.handling.tags.map(({ icon: TagIcon, label }) => (
                   <Badge
-                    className="rounded-sm border-[#933614]/40 bg-[#933614]/[0.08] text-[#dbd5c5] text-[9px] uppercase tracking-wider"
+                    className="rounded-sm border-border/50 bg-muted/30 text-[9px] text-muted-foreground uppercase tracking-wider"
                     key={label}
                     variant="outline"
                   >
@@ -530,8 +537,8 @@ export function DispatchDetail({ shipment, assignment, derived, linkedConditions
                   </Badge>
                 ))}
               </div>
-            </AlertDescription>
-          </Alert>
+            )}
+          </div>
 
           {/* Tabs */}
           <Tabs defaultValue="route" className="w-full">
