@@ -30,8 +30,15 @@ const WIDTH = 1000;
 const HEIGHT = 520;
 const SNAPSHOT_PADDING = 72;
 const ROUTE_CONTEXT_SCALE = 1.85;
-const MIN_LONGITUDE_SPAN = 10;
-const MIN_LATITUDE_SPAN = 8;
+
+// Minimum frame spans tuned for the BC Lower Mainland operational theater.
+// The old values (10° × 8°) forced every local route into a world-overview
+// scale, making the Burnaby cluster occupy ~2% of the strip.
+// At lat 49°, 2.0° lon ≈ 146km and 0.8° lat ≈ 89km — comfortably covers
+// the full production zone from the coast to Langley without losing the
+// coastline context that anchors the geography.
+const MIN_LONGITUDE_SPAN = 2.0;
+const MIN_LATITUDE_SPAN = 0.8;
 
 function roundCoordinate(value: number) {
   return Number(value.toFixed(3));
@@ -133,9 +140,13 @@ export function ShipmentRouteMap({ shipment }: ShipmentRouteMapProps) {
         createSnapshotFrame(shipment) as GeoPermissibleObjects,
       );
     } else {
+      // No route selected — show the BC Lower Mainland operational theater
+      // centered on the production zone. Scale 22000 frames the area from
+      // offshore Pacific (~-125°) through Langley (~-122°), and from
+      // Bellingham WA through North Vancouver — the full dispatch context.
       projection
-        .center([102, 17])
-        .scale(760)
+        .center([-122.8, 49.2])
+        .scale(22000)
         .translate([WIDTH / 2, HEIGHT / 2]);
     }
 
@@ -182,14 +193,21 @@ export function ShipmentRouteMap({ shipment }: ShipmentRouteMapProps) {
         preserveAspectRatio="xMidYMid slice"
       >
         {/*
-          Composition shift: translate(160 0) moves the entire projected scene
-          160 SVG units to the right. Combined with the viewBox crop (starting at
-          x=160 rather than x=0), this places the active operational cluster
-          (Vancouver / Burnaby / Surrey) at roughly 62% across the panel instead
-          of centered. Reduces left-side ocean dead space and gives the map a
-          deliberate, right-biased composition relative to the detail panel.
+          Composition shift — translates the entire projected scene right and
+          slightly down relative to the SVG canvas.
+
+          fitExtent centers the operational cluster at SVG (500, 260).
+          translate(220 30) moves it to (720, 290).
+
+          In the viewBox window "160 0 800 520":
+            horizontal: (720 − 160) / 800 = 70%   → right-biased ✓
+            vertical:   290 / 520      = 55.8%  → below mid ✓
+
+          Combined with the reduced MIN_LONGITUDE/LATITUDE spans, the
+          BC Lower Mainland geography now fills the strip at operational
+          scale rather than world-overview scale.
         */}
-        <g transform="translate(160 0)">
+        <g transform="translate(220 30)">
           {/* Land mass — subtle tonal separation from transparent ocean */}
           {land && (
             <path

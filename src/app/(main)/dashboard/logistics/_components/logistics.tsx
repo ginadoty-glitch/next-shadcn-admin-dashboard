@@ -104,8 +104,12 @@ export function Logistics() {
         />
       </div>
 
-      {/* CENTER — Order detail with propagation banners and embedded map */}
-      <div className="hidden h-full overflow-hidden lg:block">
+      {/* CENTER — Order detail with propagation banners and embedded map.
+           pt-[104px] aligns the map's top edge with the queue manifest list start,
+           which sits below the queue's CardHeader (~40px) + TabsList h-7 (~29px) +
+           gap + Search h-6 (~24px) + gap ≈ 105px. The padding reduces TransportDetail's
+           h-full content area by the same amount — the flex-1 ScrollArea absorbs it. */}
+      <div className="hidden h-full overflow-hidden lg:block lg:pt-[104px]">
         <TransportDetail
           shipment={selectedShipment}
           assignment={selectedAssignment}
