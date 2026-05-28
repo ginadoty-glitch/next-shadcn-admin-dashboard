@@ -32,7 +32,7 @@ import type {
   ConditionTier,
   DriverAssignment,
   OperationalCondition,
-} from "../../app/(main)/dashboard/dispatch/_components/dispatch-data";
+} from "../../app/(main)/dashboard/logistics/_components/operational-data";
 import type { Shipment } from "../../app/(main)/dashboard/logistics/_components/shipment-data";
 
 // ─── Propagation output types ───────────────────────────────────────────────────

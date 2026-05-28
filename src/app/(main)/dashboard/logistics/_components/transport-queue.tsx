@@ -27,7 +27,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DerivedOrderState } from "@/lib/operations/propagation";
 import { cn } from "@/lib/utils";
 
-import type { Shipment } from "../../logistics/_components/shipment-data";
+import type { Shipment } from "./shipment-data";
 
 // ─── Visual maps ────────────────────────────────────────────────────────────────
 
@@ -207,7 +207,7 @@ const EMPTY_DERIVED: DerivedOrderState = {
   linkedConditions: [],
 };
 
-export function DispatchQueue({ shipments, derivedStates, selectedShipmentId, onSelectShipment }: DispatchQueueProps) {
+export function TransportQueue({ shipments, derivedStates, selectedShipmentId, onSelectShipment }: DispatchQueueProps) {
   const blockedCount = shipments.filter((s) => {
     const d = derivedStates.get(s.id);
     return d && (d.isBlocked || d.isPermitPending || d.hasDestinationRestriction);

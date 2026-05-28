@@ -8,8 +8,8 @@ import {
 } from "@/lib/operations/propagation";
 import { cn } from "@/lib/utils";
 
-import type { Shipment } from "../../logistics/_components/shipment-data";
-import type { CallsheetRevision, ConditionTier, OperationalCondition } from "./dispatch-data";
+import type { CallsheetRevision, ConditionTier, OperationalCondition } from "./operational-data";
+import type { Shipment } from "./shipment-data";
 
 // ─── Visual maps ───────────────────────────────────────────────────────────────
 

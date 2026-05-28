@@ -8,7 +8,6 @@ import {
   MapPin,
   Package,
   PauseOctagon,
-  Radio,
   ReceiptText,
   Settings,
   TrendingUp,
@@ -43,16 +42,6 @@ export interface NavGroup {
 }
 
 export const sidebarItems: NavGroup[] = [
-  {
-    id: 1,
-    items: [
-      {
-        title: "Dispatch",
-        url: "/dashboard/dispatch",
-        icon: Radio,
-      },
-    ],
-  },
   {
     id: 2,
     label: "Logistics",

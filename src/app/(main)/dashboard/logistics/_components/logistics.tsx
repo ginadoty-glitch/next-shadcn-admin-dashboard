@@ -1,58 +1,89 @@
 "use client";
 
+/**
+ * Logistics — Canonical operational movement surface for SyncOffset.
+ *
+ * Logistics IS dispatch. This surface handles:
+ *   transport coordination · movement tracking · routing · escalation
+ *   operational propagation · live delivery state · customs/delay
+ *   timing risk · driver assignment · callsheet revision impact
+ *
+ * Three-column operational shell:
+ *   LEFT  — Compact transport manifest (propagation-aware queue)
+ *   CENTER — Transport order detail with propagation banners + map strip
+ *   RIGHT  — Operational intelligence rail (conditions, revision, rush)
+ *
+ * Propagation engine computes cascading impact across all orders on every
+ * render. Future: invalidated by Supabase realtime events on conditions,
+ * revisions, and assignments.
+ */
+
 import * as React from "react";
 
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { computeGlobalPropagation } from "@/lib/operations/propagation";
 
+import { activeCallsheetRevision, driverAssignments, operationalConditions } from "./operational-data";
+import { OperationalIntelligence } from "./operational-intelligence";
 import { shipments } from "./shipment-data";
-import { ShipmentDetails } from "./shipment-details";
-import { ShipmentList } from "./shipment-list";
+import { TransportDetail } from "./transport-detail";
+import { TransportQueue } from "./transport-queue";
+
+// Priority orders surface to the top of the manifest.
+const urgencyOrder = { priority: 0, watch: 1, normal: 2 } as const;
+const sortedShipments = [...shipments].sort((a, b) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency]);
 
 export function Logistics() {
-  const [detailsOpen, setDetailsOpen] = React.useState(false);
-  const [selectedShipmentId, setSelectedShipmentId] = React.useState<string | null>(shipments[0]?.id ?? null);
-  const selectedShipment = shipments.find((shipment) => shipment.id === selectedShipmentId) ?? shipments[0] ?? null;
+  const [selectedOrderId, setSelectedOrderId] = React.useState<string | null>(sortedShipments[0]?.id ?? null);
 
-  function handleSelectShipment(shipmentId: string) {
-    setSelectedShipmentId(shipmentId);
+  // Compute propagation state for ALL orders in a single pass.
+  const derivedStates = React.useMemo(
+    () => computeGlobalPropagation(sortedShipments, operationalConditions, activeCallsheetRevision, driverAssignments),
+    // Static mock data — deps array is stable.
+    // Future: [conditions, revision, assignments] from Supabase realtime.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
-    if (window.innerWidth < 1024) {
-      setDetailsOpen(true);
-    }
-  }
+  const selectedShipment = shipments.find((s) => s.id === selectedOrderId) ?? null;
+  const selectedAssignment = driverAssignments.find((da) => da.linkedOrderId === selectedOrderId) ?? null;
+  const selectedDerived = selectedOrderId ? (derivedStates.get(selectedOrderId) ?? null) : null;
+  const linkedConditions = selectedDerived?.linkedConditions ?? [];
 
   return (
-    <>
-      <div
-        data-content-padding="false"
-        className="grid h-[calc(100dvh-var(--dashboard-header-height))] overflow-hidden lg:grid-cols-[400px_minmax(0,1fr)] lg:divide-x"
-      >
-        <div className="h-full overflow-hidden">
-          <ShipmentList
-            shipments={shipments}
-            selectedShipmentId={selectedShipmentId}
-            onSelectShipment={handleSelectShipment}
-          />
-        </div>
-        <div className="hidden h-full overflow-hidden lg:block">
-          <ShipmentDetails shipment={selectedShipment} />
-        </div>
+    <div
+      data-content-padding="false"
+      className="grid h-[calc(100dvh-var(--dashboard-header-height))] overflow-hidden lg:grid-cols-[288px_minmax(0,1fr)_240px] lg:divide-x"
+    >
+      {/* LEFT — Compact transport manifest */}
+      <div className="h-full overflow-hidden">
+        <TransportQueue
+          shipments={sortedShipments}
+          derivedStates={derivedStates}
+          selectedShipmentId={selectedOrderId}
+          onSelectShipment={setSelectedOrderId}
+        />
       </div>
 
-      <Sheet open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <SheetContent
-          side="right"
-          className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-none data-[side=right]:md:w-3/4"
-        >
-          <SheetHeader className="sr-only">
-            <SheetTitle>
-              {selectedShipment ? `Transport Order ${selectedShipment.id}` : "Transport order details"}
-            </SheetTitle>
-            <SheetDescription>Selected transport order details and route.</SheetDescription>
-          </SheetHeader>
-          <ShipmentDetails shipment={selectedShipment} />
-        </SheetContent>
-      </Sheet>
-    </>
+      {/* CENTER — Order detail with propagation banners and embedded map */}
+      <div className="hidden h-full overflow-hidden lg:block">
+        <TransportDetail
+          shipment={selectedShipment}
+          assignment={selectedAssignment}
+          derived={selectedDerived}
+          linkedConditions={linkedConditions}
+        />
+      </div>
+
+      {/* RIGHT — Operational intelligence: conditions, revision, rush queue */}
+      <div className="hidden h-full overflow-hidden lg:block">
+        <OperationalIntelligence
+          selectedOrderId={selectedOrderId}
+          shipments={shipments}
+          conditions={operationalConditions}
+          revision={activeCallsheetRevision}
+          derivedStates={derivedStates}
+        />
+      </div>
+    </div>
   );
 }

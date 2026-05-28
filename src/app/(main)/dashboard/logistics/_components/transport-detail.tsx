@@ -8,14 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DerivedOrderState } from "@/lib/operations/propagation";
 import { cn } from "@/lib/utils";
 
-import type {
-  AttachedDocument,
-  ProductionLogEntry,
-  RouteWaypoint,
-  Shipment,
-} from "../../logistics/_components/shipment-data";
-import { ShipmentRouteMap } from "../../logistics/_components/shipment-route-map";
-import type { ConditionTier, DriverAssignment, OperationalCondition } from "./dispatch-data";
+import type { ConditionTier, DriverAssignment, OperationalCondition } from "./operational-data";
+import type { AttachedDocument, ProductionLogEntry, RouteWaypoint, Shipment } from "./shipment-data";
+import { ShipmentRouteMap } from "./shipment-route-map";
 
 // ─── Visual maps ───────────────────────────────────────────────────────────────
 
@@ -415,7 +410,7 @@ type DispatchDetailProps = {
   linkedConditions: OperationalCondition[];
 };
 
-export function DispatchDetail({ shipment, assignment, derived, linkedConditions }: DispatchDetailProps) {
+export function TransportDetail({ shipment, assignment, derived, linkedConditions }: DispatchDetailProps) {
   if (!shipment) {
     return (
       <div className="flex h-full flex-col overflow-hidden">
