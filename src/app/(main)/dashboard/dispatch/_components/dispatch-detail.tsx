@@ -2,10 +2,8 @@
 
 import { AlertTriangleIcon, Phone, Radio } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DerivedOrderState } from "@/lib/operations/propagation";
 import { cn } from "@/lib/utils";
@@ -257,50 +255,49 @@ function EmptyDetail() {
   );
 }
 
-function DriverCard({ assignment }: { assignment: DriverAssignment }) {
+/**
+ * Flat driver section — no container box.
+ * Label + status float above a compact row.
+ * Divider rhythm is provided by the parent section wrapper.
+ */
+function DriverSection({ assignment }: { assignment: DriverAssignment }) {
   const dot = driverStatusDot[assignment.status];
   const label = driverStatusLabel[assignment.status];
+  const initials = assignment.driverName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
-    <div className="flex flex-col gap-3 rounded-sm bg-muted/15 px-3 py-3">
+    <div className="flex flex-col gap-1.5">
+      {/* Section eyebrow + status */}
       <div className="flex items-center justify-between">
-        <div className="text-[9px] text-muted-foreground uppercase tracking-[0.15em]">Driver Assignment</div>
+        <span className="text-[8px] text-muted-foreground uppercase tracking-[0.15em]">Driver Assignment</span>
         <div className="flex items-center gap-1.5">
           <div className={cn("size-1.5 rounded-full", dot)} />
-          <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{label}</span>
+          <span className="text-[8px] text-muted-foreground uppercase tracking-wider">{label}</span>
         </div>
       </div>
-
-      <div className="flex items-center gap-3">
-        <Avatar className="size-8 shrink-0 after:rounded-none">
-          <AvatarFallback className="rounded-none bg-muted font-mono text-[11px] tracking-wider">
-            {assignment.driverName
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <div className="truncate font-medium text-sm leading-none">{assignment.driverName}</div>
-          <div className="font-mono text-[10px] text-muted-foreground tracking-wider">{assignment.vehicle}</div>
+      {/* Identity row */}
+      <div className="flex items-center gap-2">
+        <div className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-muted font-mono text-[9px] tracking-wider">
+          {initials}
         </div>
-        <div className="shrink-0 text-right">
-          <div className="text-[9px] text-muted-foreground uppercase capitalize tracking-wider">
-            {assignment.vehicleType}
-          </div>
-        </div>
+        <span className="min-w-0 truncate font-medium text-xs">{assignment.driverName}</span>
+        <span className="shrink-0 font-mono text-[9px] text-muted-foreground tracking-wider">{assignment.vehicle}</span>
+        <span className="shrink-0 text-[9px] text-muted-foreground/55 capitalize">{assignment.vehicleType}</span>
       </div>
-
-      <div className="flex items-center gap-4 border-border border-t pt-2.5">
+      {/* Contact row */}
+      <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5">
           <Phone className="size-3 shrink-0 text-muted-foreground" />
-          <span className="font-mono text-[#dbd5c5] text-[10px] tabular-nums">{assignment.phone}</span>
+          <span className="font-mono text-[#dbd5c5] text-[9px] tabular-nums">{assignment.phone}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Radio className="size-3 shrink-0 text-muted-foreground" />
-          <span className="text-[10px] text-muted-foreground">{assignment.radioChannel}</span>
+          <span className="text-[9px] text-muted-foreground">{assignment.radioChannel}</span>
         </div>
       </div>
     </div>
@@ -311,18 +308,27 @@ function LinkedConditions({ conditions }: { conditions: OperationalCondition[] }
   if (conditions.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="text-[9px] text-muted-foreground uppercase tracking-[0.15em]">Linked Conditions</div>
+    <div className="flex flex-col gap-1">
+      <div className="mb-0.5 text-[8px] text-muted-foreground uppercase tracking-[0.15em]">Linked Conditions</div>
       {conditions.map((c) => {
         const meta = conditionTierMeta[c.tier];
+        const leftBorder =
+          c.tier === "legal" || c.tier === "blocker"
+            ? "border-[#d3410c]/60"
+            : c.tier === "attention"
+              ? "border-[#f2b90e]/50"
+              : "border-[#bfd4ef]/30";
+        const subtleBg = c.tier === "legal" || c.tier === "blocker" ? "bg-[#d3410c]/[0.03]" : "";
         return (
-          <div key={c.id} className={cn("rounded border px-2.5 py-2", meta.borderClass, meta.bgClass)}>
-            <div className="mb-1 flex items-baseline justify-between gap-2">
-              <span className={cn("text-[9px] uppercase tracking-[0.1em]", meta.textClass)}>{meta.indicator}</span>
-              <span className="text-[9px] text-muted-foreground tabular-nums">{c.timestamp}</span>
+          <div key={c.id} className={cn("border-l-2 py-1 pl-2.5", leftBorder, subtleBg)}>
+            <div className="flex items-baseline gap-2">
+              <span className={cn("font-mono text-[8px] uppercase tracking-[0.1em]", meta.textClass)}>
+                {meta.indicator}
+              </span>
+              <span className="ml-auto font-mono text-[8px] text-muted-foreground tabular-nums">{c.timestamp}</span>
             </div>
-            <div className="font-medium text-[#dbd5c5] text-[10px] leading-snug">{c.title}</div>
-            <div className="mt-1 text-[10px] text-muted-foreground leading-relaxed">{c.description}</div>
+            <div className="font-medium text-[#dbd5c5] text-[9px] leading-snug">{c.title}</div>
+            <div className="text-[9px] text-muted-foreground/65 leading-snug">{c.description}</div>
           </div>
         );
       })}
@@ -334,17 +340,17 @@ function RouteTab({ shipment }: { shipment: Shipment }) {
   return (
     <div className="flex flex-col">
       {shipment.route.map((wp, i) => (
-        <div key={wp.location} className="flex gap-3 border-border/50 border-b py-3 first:pt-0 last:border-0">
-          <div className="flex shrink-0 flex-col items-center pt-1">
-            <div className={cn("size-2 shrink-0 rounded-full", waypointDotStyles[wp.state])} />
-            {i < shipment.route.length - 1 && <div className="mt-1.5 min-h-4 w-px flex-1 bg-border" />}
+        <div key={wp.location} className="flex gap-2.5 border-border/40 border-b py-2 first:pt-0 last:border-0">
+          <div className="flex shrink-0 flex-col items-center pt-0.5">
+            <div className={cn("size-1.5 shrink-0 rounded-full", waypointDotStyles[wp.state])} />
+            {i < shipment.route.length - 1 && <div className="mt-1 min-h-3 w-px flex-1 bg-border/60" />}
           </div>
-          <div className="flex min-w-0 flex-col gap-1 pb-1">
-            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <span className="font-medium text-xs">{wp.location}</span>
-              <span className="shrink-0 font-mono text-[10px] text-muted-foreground tabular-nums">{wp.time}</span>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <span className="font-medium text-xs leading-none">{wp.location}</span>
+              <span className="shrink-0 font-mono text-[9px] text-muted-foreground tabular-nums">{wp.time}</span>
             </div>
-            <span className={cn("text-[11px]", waypointNoteStyles[wp.state])}>{wp.note}</span>
+            <span className={cn("text-[10px] leading-snug", waypointNoteStyles[wp.state])}>{wp.note}</span>
           </div>
         </div>
       ))}
@@ -354,17 +360,17 @@ function RouteTab({ shipment }: { shipment: Shipment }) {
 
 function LogTab({ shipment }: { shipment: Shipment }) {
   return (
-    <div className="flex flex-col divide-y divide-border">
+    <div className="flex flex-col divide-y divide-border/40">
       {shipment.productionLog.map((entry) => (
-        <div key={`${entry.time}:${entry.from}`} className="flex gap-3 py-3 first:pt-0">
-          <span className="w-10 shrink-0 pt-0.5 font-mono text-[10px] text-muted-foreground tabular-nums">
+        <div key={`${entry.time}:${entry.from}`} className="flex gap-2.5 py-2 first:pt-0">
+          <span className="w-9 shrink-0 pt-px font-mono text-[9px] text-muted-foreground tabular-nums">
             {entry.time}
           </span>
-          <div className="flex min-w-0 flex-col gap-1">
-            <span className={cn("text-[10px] uppercase leading-none tracking-widest", logTypeStyles[entry.type])}>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className={cn("text-[9px] uppercase leading-none tracking-widest", logTypeStyles[entry.type])}>
               {entry.from}
             </span>
-            <span className="text-[#dbd5c5] text-xs leading-relaxed">{entry.message}</span>
+            <span className="text-[#dbd5c5] text-[11px] leading-snug">{entry.message}</span>
           </div>
         </div>
       ))}
@@ -413,7 +419,7 @@ export function DispatchDetail({ shipment, assignment, derived, linkedConditions
   if (!shipment) {
     return (
       <div className="flex h-full flex-col overflow-hidden">
-        <div className="h-[200px] shrink-0">
+        <div className="h-[160px] shrink-0">
           <ShipmentRouteMap shipment={null} />
         </div>
         <EmptyDetail />
@@ -421,15 +427,29 @@ export function DispatchDetail({ shipment, assignment, derived, linkedConditions
     );
   }
 
+  // Compute whether any propagation condition is active — drives conditional section rendering.
+  const hasPropagation =
+    derived &&
+    (derived.isBlocked ||
+      derived.isPermitPending ||
+      derived.hasDestinationRestriction ||
+      derived.hasRouteCompromise ||
+      derived.hasMovementConflict ||
+      derived.isDriverUnavailable ||
+      derived.isFrenchHoursActive ||
+      derived.hasRevisionImpact ||
+      derived.hasOvernightHold ||
+      derived.hasUnresolvedSignature);
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {/* Compact map strip */}
-      <div className="h-[200px] shrink-0 border-b">
+      {/* Map strip — embedded, no explicit background */}
+      <div className="h-[160px] shrink-0 border-b">
         <ShipmentRouteMap shipment={shipment} />
       </div>
 
       {/* Order header */}
-      <div className="shrink-0 border-b px-4 py-3">
+      <div className="shrink-0 border-b px-3 py-2.5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-1">
             <div className="flex items-center gap-2">
@@ -438,7 +458,6 @@ export function DispatchDetail({ shipment, assignment, derived, linkedConditions
                 <span className="size-1.5 rounded-full bg-current" />
                 {shipment.status}
               </Badge>
-              {/* Propagation tier badge — surfaces highest escalation tier in the header */}
               {derived?.highestTier === "blocker" || derived?.highestTier === "legal" ? (
                 <span className="rounded bg-[#d3410c]/10 px-1.5 py-0.5 font-mono text-[#d3410c] text-[9px] uppercase tracking-wider">
                   ■ blocked
@@ -473,99 +492,111 @@ export function DispatchDetail({ shipment, assignment, derived, linkedConditions
         </div>
       </div>
 
-      {/* Scrollable detail */}
+      {/*
+       * Scrollable detail — sections separated by divider lines, not containers.
+       * No outer padding on the scroll body; sections carry their own px-3 py-2.5.
+       * divide-y creates hairline separators between sections without boxes.
+       */}
       <ScrollArea className="min-h-0 flex-1">
-        <div className="flex flex-col gap-4 p-4">
-          {/* Propagation banners — cascading operational impacts */}
-          {derived && <PropagationBanners derived={derived} />}
-
-          {/* Driver assignment */}
-          {assignment ? (
-            <DriverCard assignment={assignment} />
-          ) : (
-            <div className="rounded border border-border border-dashed px-3 py-2.5 text-[10px] text-muted-foreground">
-              No driver assignment on record.
+        <div className="flex flex-col divide-y divide-border/30">
+          {/* § Propagation impacts — conditional section */}
+          {hasPropagation && derived && (
+            <div className="px-3 py-2.5">
+              <PropagationBanners derived={derived} />
             </div>
           )}
 
-          {/* Coordination note — left border accent, no outer box */}
-          <div
-            className={cn(
-              "border-l-2 py-1 pl-3",
-              shipment.urgency === "priority" && "border-[#f2b90e]/60",
-              shipment.urgency === "watch" && "border-[#4a7fa5]/50",
-              shipment.urgency === "normal" && "border-border",
+          {/* § Driver assignment */}
+          <div className="px-3 py-2.5">
+            {assignment ? (
+              <DriverSection assignment={assignment} />
+            ) : (
+              <span className="text-[9px] text-muted-foreground">No driver assignment on record.</span>
             )}
-          >
+          </div>
+
+          {/* § Coordination note + linked conditions — grouped: same operational context */}
+          <div className="flex flex-col gap-2.5 px-3 py-2.5">
             <div
               className={cn(
-                "mb-1 text-[9px] uppercase tracking-widest",
-                shipment.urgency === "priority" && "text-[#f2b90e]",
-                shipment.urgency === "watch" && "text-[#94a3b8]",
-                shipment.urgency === "normal" && "text-muted-foreground/70",
+                "border-l-2 py-1 pl-2.5",
+                shipment.urgency === "priority" && "border-[#f2b90e]/60",
+                shipment.urgency === "watch" && "border-[#4a7fa5]/50",
+                shipment.urgency === "normal" && "border-border",
               )}
             >
-              {shipment.urgency === "priority" && "▲ "}
-              {shipment.urgency === "watch" && "→ "}
-              Coordination Note
-            </div>
-            <p className="text-[#dbd5c5] text-[11px] leading-relaxed">{shipment.operationalNote}</p>
-          </div>
-
-          {/* Linked operational conditions */}
-          <LinkedConditions conditions={linkedConditions} />
-
-          <Separator />
-
-          {/* Handling — restrained; secondary to operational conditions */}
-          <div className="border-[#933614]/40 border-l-2 py-1 pl-3">
-            <div className="mb-1 flex items-center gap-1.5">
-              <AlertTriangleIcon className="size-3 shrink-0 text-[#933614]" />
-              <span className="text-[#dbd5c5]/70 text-[9px] uppercase tracking-widest">{shipment.handling.label}</span>
-            </div>
-            <p className="text-[10px] text-muted-foreground leading-relaxed">{shipment.handling.note}</p>
-            {shipment.handling.tags.length > 0 && (
-              <div className="mt-1.5 flex flex-wrap gap-1">
-                {shipment.handling.tags.map(({ icon: TagIcon, label }) => (
-                  <Badge
-                    className="rounded-sm border-border/50 bg-muted/30 text-[9px] text-muted-foreground uppercase tracking-wider"
-                    key={label}
-                    variant="outline"
-                  >
-                    <TagIcon data-icon="inline-start" />
-                    {label}
-                  </Badge>
-                ))}
+              <div
+                className={cn(
+                  "mb-0.5 text-[8px] uppercase tracking-widest",
+                  shipment.urgency === "priority" && "text-[#f2b90e]",
+                  shipment.urgency === "watch" && "text-[#94a3b8]",
+                  shipment.urgency === "normal" && "text-muted-foreground/60",
+                )}
+              >
+                {shipment.urgency === "priority" && "▲ "}
+                {shipment.urgency === "watch" && "→ "}
+                Coordination Note
               </div>
-            )}
+              <p className="text-[#dbd5c5] text-[11px] leading-relaxed">{shipment.operationalNote}</p>
+            </div>
+            <LinkedConditions conditions={linkedConditions} />
           </div>
 
-          {/* Tabs */}
-          <Tabs defaultValue="route" className="w-full">
-            <TabsList
-              className="w-full justify-start gap-2 border-b px-0 pb-0 **:data-[slot=tabs-trigger]:text-xs"
-              variant="line"
-            >
-              <TabsTrigger className="flex-none" value="route">
-                Route
-              </TabsTrigger>
-              <TabsTrigger className="flex-none" value="log">
-                Dispatch Log
-              </TabsTrigger>
-              <TabsTrigger className="flex-none" value="documents">
-                Documents
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent className="pt-3" value="route">
-              <RouteTab shipment={shipment} />
-            </TabsContent>
-            <TabsContent className="pt-3" value="log">
-              <LogTab shipment={shipment} />
-            </TabsContent>
-            <TabsContent className="pt-3" value="documents">
-              <DocumentsTab shipment={shipment} />
-            </TabsContent>
-          </Tabs>
+          {/* § Handling — left-edge marker, no container */}
+          <div className="px-3 py-2.5">
+            <div className="border-[#933614]/40 border-l-2 py-1 pl-2.5">
+              <div className="mb-0.5 flex items-center gap-1.5">
+                <AlertTriangleIcon className="size-3 shrink-0 text-[#933614]" />
+                <span className="text-[#dbd5c5]/60 text-[8px] uppercase tracking-widest">
+                  {shipment.handling.label}
+                </span>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">{shipment.handling.note}</p>
+              {shipment.handling.tags.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {shipment.handling.tags.map(({ icon: TagIcon, label }) => (
+                    <Badge
+                      key={label}
+                      variant="outline"
+                      className="rounded-sm border-border/50 bg-muted/30 text-[9px] text-muted-foreground uppercase tracking-wider"
+                    >
+                      <TagIcon data-icon="inline-start" />
+                      {label}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* § Tabbed route / log / documents */}
+          <div className="px-3">
+            <Tabs defaultValue="route" className="w-full">
+              <TabsList
+                className="h-7 w-full justify-start gap-0 border-b px-0 pb-0 **:data-[slot=tabs-trigger]:text-[10px]"
+                variant="line"
+              >
+                <TabsTrigger className="h-7 flex-none px-3" value="route">
+                  Route
+                </TabsTrigger>
+                <TabsTrigger className="h-7 flex-none px-3" value="log">
+                  Log
+                </TabsTrigger>
+                <TabsTrigger className="h-7 flex-none px-3" value="documents">
+                  Documents
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent className="pt-2" value="route">
+                <RouteTab shipment={shipment} />
+              </TabsContent>
+              <TabsContent className="pt-2" value="log">
+                <LogTab shipment={shipment} />
+              </TabsContent>
+              <TabsContent className="pt-2" value="documents">
+                <DocumentsTab shipment={shipment} />
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </ScrollArea>
     </div>

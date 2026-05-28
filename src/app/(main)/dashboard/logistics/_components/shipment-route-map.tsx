@@ -171,54 +171,52 @@ export function ShipmentRouteMap({ shipment }: ShipmentRouteMapProps) {
   }, [shipment]);
 
   return (
-    <div className="size-full min-h-0 overflow-hidden bg-[#c4cdd8] dark:bg-[#0b1220]">
+    // No explicit background — card surface reads as ocean.
+    // Eliminates the "widget-on-a-panel" effect.
+    <div className="size-full min-h-0 overflow-hidden">
       <svg
-        aria-label="Production route map — Greater Vancouver"
-        className="block size-full bg-[#c4cdd8] dark:bg-[#0b1220]"
+        aria-label="Production route map"
+        className="block size-full"
         role="img"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        preserveAspectRatio="xMidYMid meet"
+        preserveAspectRatio="xMidYMid slice"
       >
-        <rect height={HEIGHT} width={WIDTH} className="fill-[#c4cdd8] dark:fill-[#0b1220]" />
+        {/* Land mass — subtle tonal separation from transparent ocean */}
         {land && (
           <path
             d={path(land as GeoPermissibleObjects) ?? undefined}
-            className="fill-[#e4e9ef] dark:fill-[#162132]"
+            className="fill-[#c9d4de] dark:fill-[#141f30]"
             stroke="none"
             strokeWidth={0}
           />
         )}
+        {/* Country borders — barely-there hairlines */}
         {borders && (
           <path
             d={path(borders as GeoPermissibleObjects) ?? undefined}
-            className="fill-none stroke-[#a8b4c0] dark:stroke-[#1e3148]"
-            strokeWidth={0.5}
+            className="fill-none stroke-[#9aaab8] dark:stroke-[#1c2d42]"
+            strokeWidth={0.4}
           />
         )}
+        {/* Route line — quieter, thinner */}
         {routePath && (
           <path
             d={routePath}
             fill="none"
             stroke="#4a7fa5"
-            strokeDasharray="6 5"
+            strokeDasharray="5 4"
             strokeLinecap="round"
-            strokeWidth={2}
+            strokeWidth={1.5}
           />
         )}
-        {routePoints.map(({ country, label, point }) =>
+        {/* Route endpoints — minimal dot only. No outer ring, no text label.
+            Domestic CA routes showed "Canada" for both endpoints — noise.
+            Order header already carries origin/dest names. */}
+        {routePoints.map(({ label, point }) =>
           point ? (
             <g key={label} transform={`translate(${point[0]}, ${point[1]})`}>
-              <circle className="fill-[#c4cdd8] dark:fill-[#0b1220]" stroke="#4a7fa5" r={6} strokeWidth={1.5} />
-              <circle fill="#4a7fa5" r={2} />
-              <text
-                className="fill-[#2c3a4a] text-[10px] dark:fill-[#bfd4ef]"
-                dy={-11}
-                textAnchor="middle"
-                fontWeight="500"
-                letterSpacing="0.04em"
-              >
-                {country}
-              </text>
+              <circle fill="#4a7fa5" fillOpacity={0.15} r={5} />
+              <circle fill="#4a7fa5" r={2.5} />
             </g>
           ) : null,
         )}

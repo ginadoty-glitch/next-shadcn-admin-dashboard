@@ -43,7 +43,7 @@ export function Dispatch() {
   return (
     <div
       data-content-padding="false"
-      className="grid h-[calc(100dvh-var(--dashboard-header-height))] overflow-hidden lg:grid-cols-[360px_minmax(0,1fr)_280px] lg:divide-x"
+      className="grid h-[calc(100dvh-var(--dashboard-header-height))] overflow-hidden lg:grid-cols-[288px_minmax(0,1fr)_240px] lg:divide-x"
     >
       {/* LEFT — Propagation-aware transport order queue */}
       <div className="h-full overflow-hidden">

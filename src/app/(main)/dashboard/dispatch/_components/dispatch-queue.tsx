@@ -1,28 +1,23 @@
 "use client";
 
 /**
- * DispatchQueue — Propagation-aware transport order queue.
+ * DispatchQueue — High-density transport order manifest.
  *
- * Replaces ShipmentList in the Dispatch context.
- * ShipmentList is preserved unchanged for the Logistics page.
+ * Each row is a compact operational manifest strip, not a card.
+ * Target: ~55-70px per row so coordinators can scan 8+ orders per viewport.
  *
- * Each card surfaces propagation state computed by the propagation engine:
- * - Blocked (red border + indicator)
- * - Permit pending (amber indicator)
- * - Route compromised (amber indicator)
- * - Destination restricted (red indicator)
- * - Overnight hold (dim indicator)
- * - Revision impact (cool-blue indicator)
- * - Unresolved signature (warm indicator)
+ * Row structure:
+ *   Row 1: [CI ID] · [● status dot] [STATUS]          [▲/→] [ETA]
+ *   Row 2: [Origin → Dest] · [Cargo]           [■BLK] [▲RTE] [⊘CI]
+ *   Row 3: [Priority note — 1 line, truncated] (priority orders only)
+ *   [1px progress strip at bottom]
  *
- * Visual doctrine:
- * - Propagation indicators are additive overlays on the existing card rhythm.
- * - They do not replace the card — they surface conditions above the note line.
- * - Operational scanning speed is preserved: most cards have no indicators.
- * - Blocked cards get a left border accent, not a full card redesign.
+ * Propagation indicators are inline in Row 2 (max 2, right-aligned).
+ * Flags are suppressed — all current orders are domestic Canadian.
+ * Urgency note shown only for priority orders (single truncated line).
  */
 
-import { Search, SlidersHorizontal, Truck } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,216 +29,182 @@ import { cn } from "@/lib/utils";
 
 import type { Shipment } from "../../logistics/_components/shipment-data";
 
-// ─── Visual maps ───────────────────────────────────────────────────────────────
+// ─── Visual maps ────────────────────────────────────────────────────────────────
 
-// All current orders are land/road. Icon kept for future multi-mode support.
-const modeIcons = {
-  air: Truck,
-  land: Truck,
-  sea: Truck,
-} as const;
-
-const progressRingClasses: Record<Shipment["status"], string> = {
-  Scheduled: "text-muted-foreground",
-  "En Route": "text-[#f2b90e]",
-  Dispatched: "text-[#f2b90e]",
-  Completed: "text-[#45d30c]",
-  "Held — Delayed": "text-[#d3410c]",
-  "On Hold": "text-[#933614]",
-  "Awaiting Clearance": "text-[#933614]",
+/** Semantic status dot — replaces the complex conic-gradient progress ring. */
+const statusDot: Record<Shipment["status"], string> = {
+  Scheduled: "bg-muted-foreground/40",
+  "En Route": "bg-[#47AE90]",
+  Dispatched: "bg-[#f2b90e]",
+  Completed: "bg-[#47AE90]/60",
+  "Held — Delayed": "bg-[#d3410c]",
+  "On Hold": "bg-[#933614]",
+  "Awaiting Clearance": "bg-[#933614]",
 };
 
-// ─── Propagation indicator strip ─────────────────────────────────────────────────
+/** Progress strip color — thin 1px bar at the bottom of each row. */
+const progressBar: Record<Shipment["status"], string> = {
+  Scheduled: "bg-muted-foreground/20",
+  "En Route": "bg-[#47AE90]/50",
+  Dispatched: "bg-[#f2b90e]/40",
+  Completed: "bg-[#47AE90]/60",
+  "Held — Delayed": "bg-[#d3410c]/40",
+  "On Hold": "bg-[#933614]/40",
+  "Awaiting Clearance": "bg-[#933614]/40",
+};
+
+// ─── Helpers ────────────────────────────────────────────────────────────────────
 
 /**
- * A compact horizontal strip of operational impact indicators.
- * Only renders if at least one propagation condition is active for this order.
- * Indicators are brief production-language tags — not full descriptions.
+ * Extract short location name by stripping the venue qualifier after em-dash.
+ * "Stage 4 — Bridge Studios" → "Stage 4"
+ * "Cloverdale Market — Set" → "Cloverdale Market"
  */
-function PropagationIndicatorStrip({ derived }: { derived: DerivedOrderState }) {
-  const indicators: { label: string; className: string }[] = [];
-
-  if (derived.isBlocked || derived.isPermitPending) {
-    indicators.push({
-      label: derived.isPermitPending ? "Permit pending" : "Blocked",
-      className: "text-[#d3410c]",
-    });
-  }
-  if (derived.hasDestinationRestriction) {
-    indicators.push({ label: "Dest. restricted", className: "text-[#d3410c]" });
-  }
-  if (derived.hasRouteCompromise) {
-    indicators.push({ label: "Route compromised", className: "text-[#f2b90e]" });
-  }
-  if (derived.hasMovementConflict) {
-    indicators.push({ label: "Movement conflict", className: "text-[#f2b90e]" });
-  }
-  if (derived.hasOvernightHold) {
-    indicators.push({ label: "Overnight hold", className: "text-muted-foreground" });
-  }
-  if (derived.hasRevisionImpact) {
-    indicators.push({ label: "Revision impact", className: "text-[#bfd4ef]" });
-  }
-  if (derived.hasUnresolvedSignature) {
-    indicators.push({ label: "⊘ Unsigned CI", className: "text-[#933614]" });
-  }
-  if (derived.isDriverUnavailable) {
-    indicators.push({ label: "Driver unavail.", className: "text-[#d3410c]" });
-  }
-
-  if (indicators.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-border/50 border-t pt-2">
-      {indicators.map(({ label, className }) => (
-        <span key={label} className={cn("font-mono text-[9px] uppercase tracking-[0.1em]", className)}>
-          {label}
-        </span>
-      ))}
-    </div>
-  );
+function shortLoc(display: string): string {
+  const idx = display.indexOf(" — ");
+  return idx > 0 ? display.slice(0, idx).trim() : display;
 }
 
-// ─── Queue card ────────────────────────────────────────────────────────────────
+/**
+ * Up to 2 highest-severity propagation indicators for inline display.
+ * Prioritized: blocking > route/conflict > signature > revision.
+ */
+function rowIndicators(derived: DerivedOrderState): { label: string; cls: string }[] {
+  const tags: { label: string; cls: string }[] = [];
 
-type DispatchQueueCardProps = {
+  if (
+    derived.isBlocked ||
+    derived.isPermitPending ||
+    derived.hasDestinationRestriction ||
+    derived.isDriverUnavailable
+  ) {
+    tags.push({ label: "■ BLK", cls: "text-[#d3410c]" });
+  }
+  if (derived.hasRouteCompromise || derived.hasMovementConflict) {
+    tags.push({ label: "▲ RTE", cls: "text-[#f2b90e]" });
+  }
+  if (derived.hasUnresolvedSignature) {
+    tags.push({ label: "⊘ CI", cls: "text-[#933614]" });
+  }
+  if (derived.hasRevisionImpact) {
+    tags.push({ label: "↻ REV", cls: "text-[#4a7fa5]/80" });
+  }
+
+  return tags.slice(0, 2);
+}
+
+// ─── Manifest row ────────────────────────────────────────────────────────────────
+
+type DispatchQueueRowProps = {
   active?: boolean;
   derived: DerivedOrderState;
   onSelectShipment: (id: string) => void;
   shipment: Shipment;
 };
 
-function DispatchQueueCard({ shipment, derived, active, onSelectShipment }: DispatchQueueCardProps) {
-  const angle = (shipment.progress / 100) * 360;
-  const Icon = modeIcons[shipment.mode];
-
-  // Left accent border communicates blocking state immediately on scan
-  const hasBlockingState =
+function DispatchQueueRow({ shipment, derived, active, onSelectShipment }: DispatchQueueRowProps) {
+  const isBlocker =
     derived.isBlocked || derived.isPermitPending || derived.hasDestinationRestriction || derived.isDriverUnavailable;
+  const isAttention = !isBlocker && (derived.hasRouteCompromise || derived.hasMovementConflict);
 
-  const hasAttentionState = derived.hasRouteCompromise || derived.hasMovementConflict;
+  const indicators = rowIndicators(derived);
+  const origin = shortLoc(shipment.origin.display);
+  const dest = shortLoc(shipment.destination.display);
 
   return (
     <button
       type="button"
       aria-pressed={active}
-      onClick={(event) => {
-        event.currentTarget.blur();
+      onClick={(e) => {
+        e.currentTarget.blur();
         onSelectShipment(shipment.id);
       }}
       className={cn(
-        "relative flex w-full flex-col gap-2.5 rounded border p-3 text-left transition-colors",
-        "hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bfd4ef]/25",
-        // Active selection — cool steel, not marigold
-        active ? "border-[#bfd4ef]/35 bg-[#bfd4ef]/[0.04]" : "border-border/60",
-        // Propagation border overrides — left accent only
-        !active && hasBlockingState && "border-l-[#d3410c]/60",
-        !active && !hasBlockingState && hasAttentionState && "border-l-[#f2b90e]/40",
+        "relative w-full rounded border px-2.5 py-1.5 text-left transition-colors",
+        "hover:bg-muted/25 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#bfd4ef]/20",
+        active ? "border-[#bfd4ef]/30 bg-[#bfd4ef]/[0.04]" : "border-border/50 bg-transparent",
       )}
     >
-      {/* Blocking left accent strip */}
-      {!active && hasBlockingState && <div className="absolute inset-y-0 left-0 w-[2px] rounded-l bg-[#d3410c]/50" />}
-      {!active && !hasBlockingState && hasAttentionState && (
-        <div className="absolute inset-y-0 left-0 w-[2px] rounded-l bg-[#f2b90e]/40" />
+      {/* Left blocking accent strip */}
+      {!active && isBlocker && <div className="absolute inset-y-0 left-0 w-[2px] rounded-l bg-[#d3410c]/55" />}
+      {!active && isAttention && <div className="absolute inset-y-0 left-0 w-[2px] rounded-l bg-[#f2b90e]/40" />}
+
+      {/* ── Row 1: ID · status · text  →  urgency glyph + ETA ── */}
+      <div className="flex items-center gap-1.5">
+        <span className="shrink-0 font-mono text-[#bfd4ef]/70 text-[10px] tracking-wider">{shipment.id}</span>
+        <span className="text-[9px] text-muted-foreground/25">·</span>
+        <div className={cn("size-1.5 shrink-0 rounded-full", statusDot[shipment.status])} />
+        <span className="min-w-0 truncate text-[9px] text-muted-foreground/55 uppercase tracking-widest">
+          {shipment.status}
+        </span>
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 pl-2">
+          {shipment.urgency === "priority" && <span className="font-mono text-[#f2b90e] text-[9px]">▲</span>}
+          {shipment.urgency === "watch" && <span className="font-mono text-[#94a3b8] text-[9px]">→</span>}
+          <span className="font-mono text-[10px] text-foreground/80 tabular-nums">{shipment.eta}</span>
+        </div>
+      </div>
+
+      {/* ── Row 2: Route · Cargo  →  propagation tags ── */}
+      <div className="mt-0.5 flex items-center">
+        {/* Origin → Dest */}
+        <div className="flex min-w-0 shrink items-center gap-1 text-[9px]">
+          <span className="max-w-[72px] truncate text-muted-foreground/60">{origin}</span>
+          <span className="shrink-0 text-muted-foreground/25">→</span>
+          <span className="max-w-[80px] truncate font-medium text-[#dbd5c5]/80">{dest}</span>
+        </div>
+        <span className="mx-1.5 shrink-0 text-[9px] text-muted-foreground/20">·</span>
+        {/* Cargo — flex-1, truncated */}
+        <div className="min-w-0 flex-1 truncate text-[9px] text-muted-foreground/55">{shipment.cargo}</div>
+        {/* Propagation indicators — inline, max 2 */}
+        {indicators.length > 0 && (
+          <div className="ml-1.5 flex shrink-0 items-center gap-1.5">
+            {indicators.map(({ label, cls }) => (
+              <span key={label} className={cn("font-mono text-[8px] uppercase tracking-tight", cls)}>
+                {label}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Row 3: Priority coordination note — 1 line, truncated ── */}
+      {shipment.urgency === "priority" && (
+        <div className="mt-0.5 truncate text-[#f2b90e]/55 text-[9px] leading-none">{shipment.operationalNote}</div>
       )}
 
-      {/* Row 1: CI Number + Status ring */}
-      <div className="flex items-center justify-between">
-        <div className="font-mono text-[11px] text-muted-foreground tracking-wider">{shipment.id}</div>
-        <div className="flex items-center gap-1.5">
-          <div
-            style={{ "--angle": `${angle}deg` } as React.CSSProperties}
-            className={cn(
-              "grid size-3 place-items-center rounded-full bg-[conic-gradient(currentColor_0deg_var(--angle),transparent_var(--angle)_360deg)] p-[0.5px]",
-              progressRingClasses[shipment.status],
-            )}
-          >
-            <div className="grid size-2 place-items-center rounded-full bg-card">
-              <div className="size-1 rounded-full bg-current" />
-            </div>
-          </div>
-          <div className="text-[10px] text-muted-foreground uppercase tracking-widest">{shipment.status}</div>
-        </div>
-      </div>
-
-      {/* Row 2: Origin → Destination. Flags suppressed — domestic CA transport. */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <div className="truncate font-medium text-xs leading-none">{shipment.origin.display}</div>
-          <div className="text-[9px] text-muted-foreground/60 uppercase leading-none tracking-wide">
-            {shipment.origin.country}
-          </div>
-        </div>
-        <span className="shrink-0 pt-0.5 text-[10px] text-muted-foreground/30">→</span>
-        <div className="flex min-w-0 flex-col gap-0.5 text-right">
-          <div className="truncate font-medium text-xs leading-none">{shipment.destination.display}</div>
-          <div className="text-[9px] text-muted-foreground/60 uppercase leading-none tracking-wide">
-            {shipment.destination.country}
-          </div>
-        </div>
-      </div>
-
-      {/* Row 3: Progress dashed line */}
-      <div className="flex items-center gap-0.5">
-        <span
-          className="h-px min-w-0 border-foreground border-t border-dashed"
-          style={{ flexGrow: shipment.progress, flexBasis: 0 }}
-        />
-        <Icon className={cn("size-3.5", shipment.mode === "air" && "rotate-45")} />
-        <span
-          className="h-px min-w-0 border-border border-t border-dashed"
-          style={{ flexGrow: 100 - shipment.progress, flexBasis: 0 }}
+      {/* ── Progress strip ── */}
+      <div className="mt-1.5 h-px overflow-hidden rounded-full bg-border/30">
+        <div
+          className={cn("h-full rounded-full", progressBar[shipment.status])}
+          style={{ width: `${shipment.progress}%` }}
         />
       </div>
-
-      {/* Row 4: Cargo (primary) + Call Time (secondary-primary) */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="mb-0.5 text-[9px] text-muted-foreground/60 uppercase leading-none tracking-widest">
-            Brokered Items
-          </div>
-          <div className="truncate font-medium text-xs">{shipment.cargo}</div>
-        </div>
-        <div className="shrink-0 text-right">
-          <div className="mb-0.5 text-[9px] text-muted-foreground/60 uppercase leading-none tracking-widest">
-            Call Time
-          </div>
-          <div className="font-mono text-xs tabular-nums">
-            {shipment.eta}
-            {shipment.etaMeta && (
-              <span className="ml-1 font-normal font-sans text-[9px] text-muted-foreground/70">{shipment.etaMeta}</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Row 5: Coordination note — urgency drives color, not weight */}
-      <div
-        className={cn(
-          "border-border/50 border-t pt-2 text-[10px] leading-snug",
-          shipment.urgency === "priority" && "text-[#f2b90e]",
-          shipment.urgency === "watch" && "text-[#94a3b8]",
-          shipment.urgency === "normal" && "text-muted-foreground/60",
-        )}
-      >
-        {shipment.urgency === "priority" && <span className="mr-1">▲</span>}
-        {shipment.urgency === "watch" && <span className="mr-1">→</span>}
-        {shipment.operationalNote}
-      </div>
-
-      {/* Row 6: Propagation indicators (conditional) */}
-      <PropagationIndicatorStrip derived={derived} />
     </button>
   );
 }
 
-// ─── Main export ────────────────────────────────────────────────────────────────
+// ─── Queue shell ─────────────────────────────────────────────────────────────────
 
 type DispatchQueueProps = {
   derivedStates: Map<string, DerivedOrderState>;
   onSelectShipment: (id: string) => void;
   selectedShipmentId: string | null;
   shipments: Shipment[];
+};
+
+const EMPTY_DERIVED: DerivedOrderState = {
+  isBlocked: false,
+  isPermitPending: false,
+  hasRouteCompromise: false,
+  hasDestinationRestriction: false,
+  hasOvernightHold: false,
+  hasMovementConflict: false,
+  hasRevisionImpact: false,
+  isDriverUnavailable: false,
+  isFrenchHoursActive: false,
+  hasUnresolvedSignature: false,
+  highestTier: null,
+  linkedConditions: [],
 };
 
 export function DispatchQueue({ shipments, derivedStates, selectedShipmentId, onSelectShipment }: DispatchQueueProps) {
@@ -254,76 +215,66 @@ export function DispatchQueue({ shipments, derivedStates, selectedShipmentId, on
 
   return (
     <Card className="h-full rounded-none ring-0">
-      <CardHeader>
-        <CardTitle className="font-medium text-[11px] text-muted-foreground uppercase tracking-[0.15em]">
+      <CardHeader className="px-3 py-2">
+        <CardTitle className="font-medium text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
           Transport Orders
           {blockedCount > 0 && (
-            <span className="ml-2 rounded bg-[#d3410c]/10 px-1.5 py-0.5 font-mono text-[#d3410c] text-[9px] normal-case tracking-normal">
+            <span className="ml-2 rounded bg-[#d3410c]/10 px-1.5 py-0.5 font-mono text-[#d3410c] text-[8px] normal-case tracking-normal">
               {blockedCount} blocked
             </span>
           )}
         </CardTitle>
         <CardAction>
-          <Button size="icon-sm" variant="ghost">
-            <SlidersHorizontal />
+          <Button size="icon-sm" variant="ghost" className="size-6">
+            <SlidersHorizontal className="size-3" />
           </Button>
         </CardAction>
       </CardHeader>
 
-      <CardContent className="flex flex-1 flex-col gap-3 overflow-hidden px-0">
+      <CardContent className="flex flex-1 flex-col gap-1.5 overflow-hidden px-0">
+        {/* Filter tabs */}
         <Tabs defaultValue="all">
-          <TabsList className="w-full border-b px-4" variant="line">
-            <TabsTrigger className="text-xs" value="all">
+          <TabsList className="h-7 w-full border-b px-3" variant="line">
+            <TabsTrigger className="h-7 px-2 text-[10px]" value="all">
               All ({shipments.length})
             </TabsTrigger>
-            <TabsTrigger className="text-xs" value="en-route">
-              En Route
+            <TabsTrigger className="h-7 px-2 text-[10px]" value="active">
+              Active
             </TabsTrigger>
-            <TabsTrigger className="text-xs" value="held">
+            <TabsTrigger className="h-7 px-2 text-[10px]" value="held">
               Held
             </TabsTrigger>
-            <TabsTrigger className="text-xs" value="blocked">
-              Blocked
-              {blockedCount > 0 && <span className="ml-1 font-mono text-[#d3410c] text-[9px]">{blockedCount}</span>}
-            </TabsTrigger>
+            {blockedCount > 0 && (
+              <TabsTrigger className="h-7 px-2 text-[10px]" value="blocked">
+                <span className="text-[#d3410c]">■</span>
+                <span className="ml-1">{blockedCount}</span>
+              </TabsTrigger>
+            )}
           </TabsList>
         </Tabs>
 
-        <div className="px-4">
-          <InputGroup className="h-8">
+        {/* Search */}
+        <div className="px-3">
+          <InputGroup className="h-6">
             <InputGroupInput
-              className="h-8"
+              className="h-6 text-[10px]"
               aria-label="Search transport orders"
-              placeholder="Search transport orders..."
+              placeholder="Search orders..."
             />
             <InputGroupAddon>
-              <Search />
+              <Search className="size-3" />
             </InputGroupAddon>
           </InputGroup>
         </div>
 
+        {/* Manifest list */}
         <ScrollArea className="h-0 flex-1">
-          <div className="flex flex-col gap-2 px-4">
+          <div className="flex flex-col gap-0.5 px-2.5 pb-3">
             {shipments.map((shipment) => (
-              <DispatchQueueCard
+              <DispatchQueueRow
                 key={shipment.id}
                 active={shipment.id === selectedShipmentId}
-                derived={
-                  derivedStates.get(shipment.id) ?? {
-                    isBlocked: false,
-                    isPermitPending: false,
-                    hasRouteCompromise: false,
-                    hasDestinationRestriction: false,
-                    hasOvernightHold: false,
-                    hasMovementConflict: false,
-                    hasRevisionImpact: false,
-                    isDriverUnavailable: false,
-                    isFrenchHoursActive: false,
-                    hasUnresolvedSignature: false,
-                    highestTier: null,
-                    linkedConditions: [],
-                  }
-                }
+                derived={derivedStates.get(shipment.id) ?? EMPTY_DERIVED}
                 shipment={shipment}
                 onSelectShipment={onSelectShipment}
               />
