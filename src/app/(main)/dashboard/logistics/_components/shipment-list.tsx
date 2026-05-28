@@ -63,7 +63,7 @@ function ShipmentCard({ shipment, active, onSelectShipment }: ShipmentCardProps)
       )}
     >
       <div className="flex items-center justify-between">
-        <div className="font-mono text-[11px] tracking-wider text-muted-foreground">{shipment.id}</div>
+        <div className="font-mono text-[11px] text-muted-foreground tracking-wider">{shipment.id}</div>
 
         <div className="flex items-center gap-1.5">
           <div
@@ -74,7 +74,7 @@ function ShipmentCard({ shipment, active, onSelectShipment }: ShipmentCardProps)
               <div className="size-1 rounded-full bg-current" />
             </div>
           </div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{shipment.status}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-widest">{shipment.status}</div>
         </div>
       </div>
 
@@ -82,14 +82,14 @@ function ShipmentCard({ shipment, active, onSelectShipment }: ShipmentCardProps)
         <div className="flex items-center gap-1.5">
           <div className={cn(`flag:${shipment.origin.countryCode.toUpperCase()}`, "rounded-xs text-xl outline")} />
           <div className="flex min-w-0 flex-col gap-0.5">
-            <div className="truncate text-xs font-medium leading-none">{shipment.origin.display}</div>
+            <div className="truncate font-medium text-xs leading-none">{shipment.origin.display}</div>
             <div className="text-[10px] text-muted-foreground leading-none">{shipment.origin.country}</div>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 text-right">
           <div className="flex min-w-0 flex-col gap-0.5">
-            <div className="truncate text-xs font-medium leading-none">{shipment.destination.display}</div>
+            <div className="truncate font-medium text-xs leading-none">{shipment.destination.display}</div>
             <div className="text-[10px] text-muted-foreground leading-none">{shipment.destination.country}</div>
           </div>
           <div className={cn(`flag:${shipment.destination.countryCode.toUpperCase()}`, "rounded-xs text-xl outline")} />
@@ -110,20 +110,33 @@ function ShipmentCard({ shipment, active, onSelectShipment }: ShipmentCardProps)
 
       <div className="flex items-center justify-between">
         <div className="min-w-0 flex-1 pr-3">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none mb-1">
+          <div className="mb-1 text-[10px] text-muted-foreground uppercase leading-none tracking-widest">
             Brokered Items
           </div>
-          <div className="truncate text-xs font-medium">{shipment.cargo}</div>
+          <div className="truncate font-medium text-xs">{shipment.cargo}</div>
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-none mb-1">Call Time</div>
+          <div className="mb-1 text-[10px] text-muted-foreground uppercase leading-none tracking-widest">Call Time</div>
           <div className="font-mono text-xs tabular-nums">
             {shipment.eta}
             {shipment.etaMeta && (
-              <span className="ml-1 font-sans font-normal text-muted-foreground text-[10px]">{shipment.etaMeta}</span>
+              <span className="ml-1 font-normal font-sans text-[10px] text-muted-foreground">{shipment.etaMeta}</span>
             )}
           </div>
         </div>
+      </div>
+
+      <div
+        className={cn(
+          "border-border border-t pt-2 text-[10px] leading-snug",
+          shipment.urgency === "priority" && "text-[#f2b90e]",
+          shipment.urgency === "watch" && "text-[#dbd5c5]",
+          shipment.urgency === "normal" && "text-muted-foreground",
+        )}
+      >
+        {shipment.urgency === "priority" && <span className="mr-1">▲</span>}
+        {shipment.urgency === "watch" && <span className="mr-1">→</span>}
+        {shipment.operationalNote}
       </div>
     </button>
   );
@@ -133,7 +146,7 @@ export function ShipmentList({ shipments, selectedShipmentId, onSelectShipment }
   return (
     <Card className="h-full rounded-none ring-0">
       <CardHeader>
-        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">
+        <CardTitle className="font-medium text-[11px] text-muted-foreground uppercase tracking-[0.15em]">
           Transport Orders
         </CardTitle>
         <CardAction>
