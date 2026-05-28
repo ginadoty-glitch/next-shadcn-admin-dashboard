@@ -259,7 +259,7 @@ export function OperationalIntelligence({
           {/* ── Pending Signatures ─────────────────────────────── */}
           {pendingSignatures.length > 0 && (
             <div className="px-3 py-2">
-              <SectionLabel label="Pending Signatures" count={pendingSignatures.length} countClass="text-[#933614]" />
+              <SectionLabel label="Pending Signatures" count={pendingSignatures.length} countClass="text-[#f2b90e]" />
               <div className="flex flex-col gap-0.5">
                 {pendingSignatures.map((s) => (
                   <div

@@ -22,15 +22,54 @@ import * as React from "react";
 
 import { computeGlobalPropagation } from "@/lib/operations/propagation";
 
-import { activeCallsheetRevision, driverAssignments, operationalConditions } from "./operational-data";
+import { activeCallsheetRevision, driverAssignments, operationalConditions, PRODUCTION_TIME } from "./operational-data";
 import { OperationalIntelligence } from "./operational-intelligence";
+import type { Shipment } from "./shipment-data";
 import { shipments } from "./shipment-data";
 import { TransportDetail } from "./transport-detail";
-import { TransportQueue } from "./transport-queue";
+import { parseProductionMinutes, TransportQueue } from "./transport-queue";
 
-// Priority orders surface to the top of the manifest.
+// ─── Manifest sort ─────────────────────────────────────────────────────────────
+//
+// Primary: urgency tier (priority → watch → normal → completed)
+// Secondary within tier: temporal pressure (overdue → critical → on-time)
+//
+// Completed orders always sink to the bottom of the manifest regardless of
+// urgency so coordinators can focus on active movement pressure.
+
 const urgencyOrder = { priority: 0, watch: 1, normal: 2 } as const;
-const sortedShipments = [...shipments].sort((a, b) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency]);
+const productionMinutes = parseProductionMinutes(PRODUCTION_TIME) ?? 0;
+
+/**
+ * Returns a sort key based on temporal pressure for an order.
+ * Lower = surfaces higher in the queue.
+ */
+function temporalSortKey(s: Shipment): number {
+  if (s.status === "Completed") return 90;
+  // Hard-blocked orders with no ETA surface near top of their urgency tier.
+  if (s.status === "On Hold" || s.status === "Awaiting Clearance") return 5;
+
+  const etaMin = parseProductionMinutes(s.eta) ?? parseProductionMinutes(s.etaMeta);
+  if (etaMin === null) return 20;
+
+  const delta = etaMin - productionMinutes;
+  if (delta < 0) return 0; // overdue
+  if (delta < 20) return 10; // critical window
+  if (delta < 60) return 30; // approaching
+  return 50; // on schedule
+}
+
+const sortedShipments = [...shipments].sort((a, b) => {
+  // Completed orders sink regardless of urgency tag.
+  const aCompleted = a.status === "Completed" ? 1 : 0;
+  const bCompleted = b.status === "Completed" ? 1 : 0;
+  if (aCompleted !== bCompleted) return aCompleted - bCompleted;
+
+  const urgencyDiff = urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+  if (urgencyDiff !== 0) return urgencyDiff;
+
+  return temporalSortKey(a) - temporalSortKey(b);
+});
 
 export function Logistics() {
   const [selectedOrderId, setSelectedOrderId] = React.useState<string | null>(sortedShipments[0]?.id ?? null);
@@ -61,6 +100,7 @@ export function Logistics() {
           derivedStates={derivedStates}
           selectedShipmentId={selectedOrderId}
           onSelectShipment={setSelectedOrderId}
+          productionTime={PRODUCTION_TIME}
         />
       </div>
 

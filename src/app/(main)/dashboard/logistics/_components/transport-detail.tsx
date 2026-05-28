@@ -14,14 +14,21 @@ import { ShipmentRouteMap } from "./shipment-route-map";
 
 // ─── Visual maps ───────────────────────────────────────────────────────────────
 
+/**
+ * Status badge classes — canonical semantic color mapping.
+ * Green  = active movement / confirmed delivery
+ * Amber  = timing risk / attention required
+ * Red    = blocked / hard failure
+ * Slate  = inactive / pending start
+ */
 const statusBadgeClasses: Record<Shipment["status"], string> = {
   Scheduled: "border-muted bg-muted/50 text-muted-foreground",
-  "En Route": "border-[#f2b90e]/30 bg-[#f2b90e]/10 text-[#f2b90e]",
-  Dispatched: "border-[#f2b90e]/30 bg-[#f2b90e]/10 text-[#f2b90e]",
-  Completed: "border-[#45d30c]/30 bg-[#45d30c]/10 text-[#45d30c]",
-  "Held — Delayed": "border-[#d3410c]/30 bg-[#d3410c]/10 text-[#d3410c]",
-  "On Hold": "border-[#933614]/30 bg-[#933614]/10 text-[#933614]",
-  "Awaiting Clearance": "border-[#933614]/30 bg-[#933614]/10 text-[#933614]",
+  "En Route": "border-[#47AE90]/30 bg-[#47AE90]/10 text-[#47AE90]",
+  Dispatched: "border-[#47AE90]/30 bg-[#47AE90]/10 text-[#47AE90]",
+  Completed: "border-[#47AE90]/30 bg-[#47AE90]/10 text-[#47AE90]/80",
+  "Held — Delayed": "border-[#f2b90e]/30 bg-[#f2b90e]/10 text-[#f2b90e]",
+  "On Hold": "border-[#d3410c]/30 bg-[#d3410c]/10 text-[#d3410c]",
+  "Awaiting Clearance": "border-[#d3410c]/30 bg-[#d3410c]/10 text-[#d3410c]",
 };
 
 const driverStatusDot: Record<DriverAssignment["status"], string> = {
@@ -69,7 +76,7 @@ const conditionTierMeta: Record<
 };
 
 const waypointDotStyles: Record<RouteWaypoint["state"], string> = {
-  completed: "bg-[#45d30c]",
+  completed: "bg-[#47AE90]",
   active: "bg-[#f2b90e]",
   pending: "bg-border",
   restricted: "bg-[#d3410c]",
@@ -84,17 +91,17 @@ const waypointNoteStyles: Record<RouteWaypoint["state"], string> = {
 
 const logTypeStyles: Record<ProductionLogEntry["type"], string> = {
   dispatch: "text-[#bfd4ef]",
-  update: "text-[#dbd5c5]",
+  update: "text-muted-foreground",
   alert: "text-[#f2b90e]",
-  confirmation: "text-[#45d30c]",
+  confirmation: "text-[#47AE90]",
 };
 
 const docTypeBadgeStyles: Record<AttachedDocument["type"], string> = {
-  "call-sheet": "border-[#f2b90e]/30 bg-[#f2b90e]/[0.08] text-[#f2b90e]",
+  "call-sheet": "border-[#bfd4ef]/30 bg-[#bfd4ef]/[0.08] text-[#bfd4ef]",
   "movement-order": "border-[#bfd4ef]/30 bg-[#bfd4ef]/[0.08] text-[#bfd4ef]",
-  permit: "border-[#933614]/30 bg-[#933614]/[0.08] text-[#dbd5c5]",
+  permit: "border-[#f2b90e]/30 bg-[#f2b90e]/[0.07] text-[#f2b90e]",
   ci: "border-border bg-muted/50 text-muted-foreground",
-  revision: "border-[#45d30c]/30 bg-[#45d30c]/[0.08] text-[#45d30c]",
+  revision: "border-[#47AE90]/30 bg-[#47AE90]/[0.07] text-[#47AE90]",
 };
 
 const docTypeLabels: Record<AttachedDocument["type"], string> = {
@@ -448,7 +455,7 @@ export function TransportDetail({ shipment, assignment, derived, linkedCondition
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-1">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-sm tabular-nums tracking-wider">{shipment.id}</span>
+              <span className="font-mono text-[13px] tabular-nums tracking-wider">{shipment.id}</span>
               <Badge variant="outline" className={cn("gap-1.5 text-[10px]", statusBadgeClasses[shipment.status])}>
                 <span className="size-1.5 rounded-full bg-current" />
                 {shipment.status}
@@ -539,9 +546,9 @@ export function TransportDetail({ shipment, assignment, derived, linkedCondition
 
           {/* § Handling — left-edge marker, no container */}
           <div className="px-3 py-2.5">
-            <div className="border-[#933614]/40 border-l-2 py-1 pl-2.5">
+            <div className="border-[#f2b90e]/40 border-l-2 py-1 pl-2.5">
               <div className="mb-0.5 flex items-center gap-1.5">
-                <AlertTriangleIcon className="size-3 shrink-0 text-[#933614]" />
+                <AlertTriangleIcon className="size-3 shrink-0 text-[#f2b90e]/70" />
                 <span className="text-[#dbd5c5]/60 text-[8px] uppercase tracking-widest">
                   {shipment.handling.label}
                 </span>

@@ -1,7 +1,19 @@
-// Dispatch-specific data layer.
-// Transport Orders are owned by the Logistics module (shipment-data.ts).
+// Logistics operational data layer.
+// Transport Orders are owned by shipment-data.ts.
 // This module augments them with driver assignments, operational conditions,
-// and callsheet revision state — the intelligence layer of the Dispatch surface.
+// and callsheet revision state — the intelligence layer of the surface.
+
+/**
+ * Simulated production clock — Day 12, 07:23.
+ *
+ * Context: crew call was 06:30 (revised from 06:00 per R2 callsheet).
+ * Camera block 1 setup underway. First shot scheduled 07:30.
+ * A-Camera package (CI-01) and catering rig (CI-21) are in the critical window.
+ *
+ * Future: replace with a live `useProductionClock()` hook driven by Supabase
+ * realtime or a production-schedule service.
+ */
+export const PRODUCTION_TIME = "07:23";
 
 export type DriverStatus = "active" | "staged" | "standby" | "off-duty";
 
