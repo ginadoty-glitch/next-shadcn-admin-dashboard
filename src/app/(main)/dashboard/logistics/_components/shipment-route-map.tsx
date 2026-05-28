@@ -178,48 +178,58 @@ export function ShipmentRouteMap({ shipment }: ShipmentRouteMapProps) {
         aria-label="Production route map"
         className="block size-full"
         role="img"
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        viewBox="160 0 800 520"
         preserveAspectRatio="xMidYMid slice"
       >
-        {/* Land mass — subtle tonal separation from transparent ocean */}
-        {land && (
-          <path
-            d={path(land as GeoPermissibleObjects) ?? undefined}
-            className="fill-[#c9d4de] dark:fill-[#141f30]"
-            stroke="none"
-            strokeWidth={0}
-          />
-        )}
-        {/* Country borders — barely-there hairlines */}
-        {borders && (
-          <path
-            d={path(borders as GeoPermissibleObjects) ?? undefined}
-            className="fill-none stroke-[#9aaab8] dark:stroke-[#1c2d42]"
-            strokeWidth={0.4}
-          />
-        )}
-        {/* Route line — quieter, thinner */}
-        {routePath && (
-          <path
-            d={routePath}
-            fill="none"
-            stroke="#4a7fa5"
-            strokeDasharray="5 4"
-            strokeLinecap="round"
-            strokeWidth={1.5}
-          />
-        )}
-        {/* Route endpoints — minimal dot only. No outer ring, no text label.
-            Domestic CA routes showed "Canada" for both endpoints — noise.
-            Order header already carries origin/dest names. */}
-        {routePoints.map(({ label, point }) =>
-          point ? (
-            <g key={label} transform={`translate(${point[0]}, ${point[1]})`}>
-              <circle fill="#4a7fa5" fillOpacity={0.15} r={5} />
-              <circle fill="#4a7fa5" r={2.5} />
-            </g>
-          ) : null,
-        )}
+        {/*
+          Composition shift: translate(160 0) moves the entire projected scene
+          160 SVG units to the right. Combined with the viewBox crop (starting at
+          x=160 rather than x=0), this places the active operational cluster
+          (Vancouver / Burnaby / Surrey) at roughly 62% across the panel instead
+          of centered. Reduces left-side ocean dead space and gives the map a
+          deliberate, right-biased composition relative to the detail panel.
+        */}
+        <g transform="translate(160 0)">
+          {/* Land mass — subtle tonal separation from transparent ocean */}
+          {land && (
+            <path
+              d={path(land as GeoPermissibleObjects) ?? undefined}
+              className="fill-[#c9d4de] dark:fill-[#141f30]"
+              stroke="none"
+              strokeWidth={0}
+            />
+          )}
+          {/* Country borders — barely-there hairlines */}
+          {borders && (
+            <path
+              d={path(borders as GeoPermissibleObjects) ?? undefined}
+              className="fill-none stroke-[#9aaab8] dark:stroke-[#1c2d42]"
+              strokeWidth={0.4}
+            />
+          )}
+          {/* Route line — quieter, thinner */}
+          {routePath && (
+            <path
+              d={routePath}
+              fill="none"
+              stroke="#4a7fa5"
+              strokeDasharray="5 4"
+              strokeLinecap="round"
+              strokeWidth={1.5}
+            />
+          )}
+          {/* Route endpoints — minimal dot only. No outer ring, no text label.
+              Domestic CA routes showed "Canada" for both endpoints — noise.
+              Order header already carries origin/dest names. */}
+          {routePoints.map(({ label, point }) =>
+            point ? (
+              <g key={label} transform={`translate(${point[0]}, ${point[1]})`}>
+                <circle fill="#4a7fa5" fillOpacity={0.15} r={5} />
+                <circle fill="#4a7fa5" r={2.5} />
+              </g>
+            ) : null,
+          )}
+        </g>
       </svg>
     </div>
   );

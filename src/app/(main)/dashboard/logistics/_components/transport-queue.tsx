@@ -229,15 +229,15 @@ function ManifestRow({ shipment, derived, active, temporal, onSelectShipment }: 
 
       {/* ── Row 1: ID · status  →  urgency + temporal ETA ── */}
       <div className="flex items-center gap-1.5">
-        <span className="shrink-0 font-mono text-[10px] tracking-wider text-[#bfd4ef]/70">{shipment.id}</span>
+        <span className="shrink-0 font-mono text-[#bfd4ef]/70 text-[10px] tracking-wider">{shipment.id}</span>
         <span className="text-[9px] text-muted-foreground/25">·</span>
         <div className={cn("size-1.5 shrink-0 rounded-full", statusDot[shipment.status])} />
-        <span className="min-w-0 truncate text-[9px] uppercase tracking-widest text-muted-foreground/55">
+        <span className="min-w-0 truncate text-[9px] text-muted-foreground/55 uppercase tracking-widest">
           {shipment.status}
         </span>
         <div className="ml-auto flex shrink-0 items-center gap-1.5 pl-2">
-          {shipment.urgency === "priority" && <span className="font-mono text-[9px] text-[#f2b90e]">▲</span>}
-          {shipment.urgency === "watch" && <span className="font-mono text-[9px] text-[#94a3b8]">→</span>}
+          {shipment.urgency === "priority" && <span className="font-mono text-[#f2b90e] text-[9px]">▲</span>}
+          {shipment.urgency === "watch" && <span className="font-mono text-[#94a3b8] text-[9px]">→</span>}
           {/* Temporal ETA — color encodes time pressure */}
           <span
             className={cn(
@@ -276,7 +276,7 @@ function ManifestRow({ shipment, derived, active, temporal, onSelectShipment }: 
 
       {/* ── Row 3: Priority coordination note ── */}
       {shipment.urgency === "priority" && (
-        <div className="mt-0.5 truncate text-[9px] leading-none text-[#f2b90e]/55">{shipment.operationalNote}</div>
+        <div className="mt-0.5 truncate text-[#f2b90e]/55 text-[9px] leading-none">{shipment.operationalNote}</div>
       )}
 
       {/* ── Progress strip ── */}
@@ -332,17 +332,17 @@ export function TransportQueue({
   return (
     <Card className="h-full rounded-none ring-0">
       <CardHeader className="px-3 py-2">
-        <CardTitle className="font-medium text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+        <CardTitle className="font-medium text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
           Transport Orders
           {blockedCount > 0 && (
-            <span className="ml-2 rounded bg-[#d3410c]/10 px-1.5 py-0.5 font-mono text-[8px] normal-case tracking-normal text-[#d3410c]">
+            <span className="ml-2 rounded bg-[#d3410c]/10 px-1.5 py-0.5 font-mono text-[#d3410c] text-[8px] normal-case tracking-normal">
               {blockedCount} blocked
             </span>
           )}
         </CardTitle>
         <CardAction>
           {/* Production clock — anchors all temporal ETA calculations */}
-          <span className="mr-1.5 font-mono text-[8px] tracking-wider text-muted-foreground/30">
+          <span className="mr-1.5 font-mono text-[8px] text-muted-foreground/30 tracking-wider">
             D12 · {productionTime}
           </span>
           <Button size="icon-sm" variant="ghost" className="size-6">

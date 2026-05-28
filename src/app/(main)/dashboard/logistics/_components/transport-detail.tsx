@@ -421,7 +421,7 @@ export function TransportDetail({ shipment, assignment, derived, linkedCondition
   if (!shipment) {
     return (
       <div className="flex h-full flex-col overflow-hidden">
-        <div className="h-[160px] shrink-0">
+        <div className="h-[272px] shrink-0">
           <ShipmentRouteMap shipment={null} />
         </div>
         <EmptyDetail />
@@ -446,7 +446,7 @@ export function TransportDetail({ shipment, assignment, derived, linkedCondition
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Map strip — embedded, no explicit background */}
-      <div className="h-[160px] shrink-0 border-b">
+      <div className="h-[272px] shrink-0 border-b">
         <ShipmentRouteMap shipment={shipment} />
       </div>
 
